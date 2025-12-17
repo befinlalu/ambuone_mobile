@@ -14,7 +14,6 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(path: PageRoutes.register, builder: (context, state) => Register()),
   ],
-
   redirect: (context, state) async {
     final token = SharedStorages().getAccessToken();
     final path = state.matchedLocation;

@@ -1,7 +1,20 @@
 part of 'index.dart';
 
-class Login extends StatelessWidget {
+class Login extends StatefulWidget {
   const Login({super.key});
+
+  @override
+  State<Login> createState() => _LoginState();
+}
+
+class _LoginState extends State<Login> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController phoneController;
+  @override
+  void initState() {
+    super.initState();
+    phoneController = TextEditingController();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,12 +31,14 @@ class Login extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset(
-                    AppImages.authLogo, // your image
-                    fit: BoxFit.cover,
-                  ),
+                  Image.asset(AppImages.authLogo, fit: BoxFit.cover),
                   Container(
-                    color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.15),
+                    color: const Color.fromARGB(
+                      255,
+                      0,
+                      0,
+                      0,
+                    ).withValues(alpha: 0.1),
                   ),
                 ],
               ),
@@ -35,44 +50,31 @@ class Login extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("LOGIN", style: AppFontStyles.h6(context)),
-                        const SizedBox(height: 12),
-
-                        PrimaryTextFormField(label: 'Phone Number'),
-                        const SizedBox(height: 32),
-                        MainButton(
-                          buttonColor: AppColors.redColor,
-                          buttonTitle: 'Login',
-                          textStyle: TextStyle(color: Colors.white),
-                        ),
-                        SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                child: Form(
+                  key: _formKey,
+                  child: true
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("or", style: AppFontStyles.h6Hint(context)),
+                            Text("LOGIN", style: AppFontStyles.h6(context)),
+                            const SizedBox(height: 12),
+                            OtpFields(
+                              length: 6,
+                              onCompleted: (otp) {
+                                debugPrint("Entered OTP: $otp");
+                                // verifyOtp(otp);
+                              },
+                            ),
                           ],
+                        )
+                      : LoginSection(
+                          controller: phoneController,
+                          onPressed: getOtp,
                         ),
-                        SizedBox(height: 20),
-                        MainButton(
-                          buttonColor: Theme.of(context).colorScheme.tertiary,
-                          buttonTitle: 'Subscribe now',
-                          textStyle: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -80,5 +82,13 @@ class Login extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  getOtp() {
+    if (_formKey.currentState!.validate()) {
+      if (phoneController.text.length < 10) {
+        ToastService.showError('Invalid phone number');
+      }
+    }
   }
 }

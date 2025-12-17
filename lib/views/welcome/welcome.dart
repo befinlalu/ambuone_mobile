@@ -100,7 +100,7 @@ class _WelcomeState extends State<Welcome> {
               buttonColor: Theme.of(context).primaryColor,
               buttonTitle: 'Get Started',
               onPressed: () {
-                context.go(PageRoutes.login);
+                context.push(PageRoutes.login);
               },
             ),
           ),

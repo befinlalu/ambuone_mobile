@@ -9,30 +9,41 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: PageRoutes.welcome, builder: (context, state) => Welcome()),
 
     GoRoute(path: PageRoutes.home, builder: (context, state) => Home()),
+
+    GoRoute(path: PageRoutes.login, builder: (context, state) => Login()),
+
+    GoRoute(path: PageRoutes.register, builder: (context, state) => Register()),
   ],
 
   redirect: (context, state) async {
     final token = SharedStorages().getAccessToken();
     final path = state.matchedLocation;
 
-    if (path == PageRoutes.splash) {
-      // await Future.delayed(const Duration(seconds: 20));
-      // return token == null ? PageRoutes.welcome : PageRoutes.home;
-      return null;
-    }
+    // 1. Always allow Splash
+    if (path == PageRoutes.splash) return null;
 
-    final isOnWelcome = path == PageRoutes.welcome;
+    // 2. Define Public Pages (Pages you can visit without logging in)
+    final publicPages = [
+      PageRoutes.welcome,
+      PageRoutes.login,
+      PageRoutes.register,
+    ];
+    final isGoingToPublicPage = publicPages.contains(path);
 
-    // Not logged in → go to welcome
+    // 3. Scenario: User is NOT logged in
     if (token == null || token.isEmpty) {
-      return isOnWelcome ? null : PageRoutes.welcome;
+      // If they are trying to go to a public page, let them pass.
+      // If they try to go to Home/Profile, force them to Welcome.
+      return isGoingToPublicPage ? null : PageRoutes.welcome;
     }
 
-    // Logged in but on welcome → go home
-    if (isOnWelcome) {
+    // 4. Scenario: User IS logged in
+    // If they try to access login/register/welcome while logged in,
+    // redirect them to Home.
+    if (isGoingToPublicPage) {
       return PageRoutes.home;
     }
 
-    return null;
+    return null; // Allow navigation to protected pages (Home, etc.)
   },
 );

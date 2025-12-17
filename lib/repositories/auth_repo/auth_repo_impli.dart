@@ -13,4 +13,29 @@ class AuthRepoImpli extends BaseRepository implements AuthRepo {
       );
     });
   }
+
+  @override
+  Future<ApiResponse<LoginResponseModel>> login(
+    String phoneNumber,
+    String otp,
+  ) async {
+    return apiCall<LoginResponseModel>(() {
+      return _handler.handlePostRequest(
+        endpoint: '/api/users/login/otp-verify/',
+        body: {'phone_number': phoneNumber, 'otp': otp},
+        fromJson: (json) => LoginResponseModel.fromJson(json),
+      );
+    });
+  }
+
+  @override
+  Future<ApiResponse<void>> registerOtp(String phoneNumber) {
+    return apiCall<void>(() {
+      return _handler.handlePostRequest<Map<String, dynamic>>(
+        endpoint: '/api/users/register/request-otp/',
+        body: {'phone_number': phoneNumber},
+        fromJson: (json) => json,
+      );
+    });
+  }
 }

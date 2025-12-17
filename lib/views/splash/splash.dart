@@ -21,7 +21,7 @@ class _SplashState extends State<Splash> {
 
     final session = SharedStorages().getAccessToken();
 
-    if (session != null) {
+    if (session == null || session.isEmpty) {
       context.go(PageRoutes.welcome);
     } else {
       context.go(PageRoutes.home);
@@ -36,26 +36,6 @@ class _SplashState extends State<Splash> {
           Align(
             alignment: Alignment.center,
             child: Image.asset(AppImages.appLogo),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  "No matter whether you are in an emergency",
-                  textAlign: TextAlign.center,
-                  style: AppFontStyles.h6Hint(context),
-                ),
-                Text(
-                  "We are here to help you",
-                  textAlign: TextAlign.center,
-                  style: AppFontStyles.h6Hint(context),
-                ),
-                SizedBox(height: 12),
-              ],
-            ),
           ),
         ],
       ),

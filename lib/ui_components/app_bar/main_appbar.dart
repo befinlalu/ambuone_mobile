@@ -42,10 +42,10 @@ class CommonAppbar extends StatelessWidget implements PreferredSizeWidget {
           : const Text(''),
       title: isLogo
           ? SizedBox(
-              height: 52,
+              height: 70,
               child: AspectRatio(
                 aspectRatio: 16 / 9,
-                child: SvgPicture.asset(AppImages.appLogo),
+                child: Image.asset(AppImages.appLogo),
               ),
             )
           : Text(title, style: AppFontStyles.h5(context)),

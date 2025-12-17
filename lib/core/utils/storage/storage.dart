@@ -14,4 +14,8 @@ abstract class Storage {
   String? getRefreshToken();
 
   Future<void> setRefreshToken(String value);
+
+  User? getUser();
+
+  Future<void> setUser(User? user);
 }

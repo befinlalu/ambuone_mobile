@@ -3,6 +3,7 @@ part of 'index.dart';
 class _StorageKeys {
   static const String accessToken = 'access-token';
   static const String refreshToken = 'refresh-token';
+  static const String user = 'user';
 }
 
 class SharedStorages implements Storage {
@@ -71,14 +72,14 @@ class SharedStorages implements Storage {
   Future<void> setRefreshToken(String value) async {
     await _preferences.setString(_StorageKeys.refreshToken, value);
   }
+
+  @override
+  User? getUser() {
+    return _getJsonObject(_StorageKeys.user, User.fromJson);
+  }
+
+  @override
+  Future<void> setUser(User? user) {
+    return _setJsonObject(_StorageKeys.user, user);
+  }
 }
-
-  // @override
-  // InvitesRequestsModel? getRequests() {
-  //   return _getJsonObject(_StorageKeys.requests, InvitesRequestsModel.fromJson);
-  // }
-
-  // @override
-  // Future<void> setInvites(InvitesRequestsModel? invitesRequests) async {
-  //   await _setJsonObject(_StorageKeys.invites, invitesRequests);
-  // }

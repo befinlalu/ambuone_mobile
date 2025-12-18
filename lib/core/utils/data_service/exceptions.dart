@@ -1,28 +1,28 @@
 part of 'index.dart';
 
 abstract class ApiException implements Exception {
-  final String message;
+  final dynamic error;
   final int? statusCode;
 
-  ApiException(this.message, [this.statusCode]);
+  ApiException(this.error, [this.statusCode]);
 }
 
 class NetworkException extends ApiException {
-  NetworkException(super.message);
+  NetworkException(super.error);
 }
 
 class RepositoryException extends ApiException {
-  RepositoryException(super.message);
+  RepositoryException(super.error);
 }
 
 class TimeoutException extends ApiException {
-  TimeoutException(super.message);
+  TimeoutException(super.error);
 }
 
 class CustomException extends ApiException {
-  CustomException(super.message, [super.statusCode]);
+  CustomException(super.error, [super.statusCode]);
 }
 
 class UnAuthenticateException extends ApiException {
-  UnAuthenticateException(super.message, [super.statusCode]);
+  UnAuthenticateException(super.error, [super.statusCode]);
 }

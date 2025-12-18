@@ -64,6 +64,7 @@ class _LoginState extends State<Login> {
                       DialogManager.instance.hideLoadingDialog(context);
                     }
                     if (state is GetOtpErrorState) {
+                      debugPrint(state.message);
                       DialogManager.instance.hideLoadingDialog(context);
                       ToastService.showError(state.message);
                     }

@@ -4,15 +4,27 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   routes: [
     // 1. Splash Route
-    GoRoute(path: PageRoutes.splash, builder: (context, state) => Splash()),
+    GoRoute(
+      path: PageRoutes.splash,
+      builder: (context, state) =>
+          BlocProvider(create: (context) => sl<AuthBloc>(), child: Splash()),
+    ),
 
     GoRoute(path: PageRoutes.welcome, builder: (context, state) => Welcome()),
 
     GoRoute(path: PageRoutes.home, builder: (context, state) => Home()),
 
-    GoRoute(path: PageRoutes.login, builder: (context, state) => Login()),
+    GoRoute(
+      path: PageRoutes.login,
+      builder: (context, state) =>
+          BlocProvider(create: (context) => sl<AuthBloc>(), child: Login()),
+    ),
 
-    GoRoute(path: PageRoutes.register, builder: (context, state) => Register()),
+    GoRoute(
+      path: PageRoutes.register,
+      builder: (context, state) =>
+          BlocProvider(create: (context) => sl<AuthBloc>(), child: Register()),
+    ),
   ],
   redirect: (context, state) async {
     final token = SharedStorages().getAccessToken();

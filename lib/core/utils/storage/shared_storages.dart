@@ -59,8 +59,10 @@ class SharedStorages implements Storage {
   }
 
   @override
-  Future<void> setAccessToken(String value) async {
-    await _preferences.setString(_StorageKeys.accessToken, value);
+  Future<void> setAccessToken(String? value) async {
+    if (value != null) {
+      await _preferences.setString(_StorageKeys.accessToken, value);
+    }
   }
 
   @override
@@ -69,8 +71,10 @@ class SharedStorages implements Storage {
   }
 
   @override
-  Future<void> setRefreshToken(String value) async {
-    await _preferences.setString(_StorageKeys.refreshToken, value);
+  Future<void> setRefreshToken(String? value) async {
+    if (value != null) {
+      await _preferences.setString(_StorageKeys.refreshToken, value);
+    }
   }
 
   @override

@@ -10,6 +10,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController phoneController;
+  String otpValue = '';
   @override
   void initState() {
     super.initState();
@@ -54,27 +55,64 @@ class _LoginState extends State<Login> {
                   color: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                 ),
-                child: Form(
-                  key: _formKey,
-                  child: true
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("LOGIN", style: AppFontStyles.h6(context)),
-                            const SizedBox(height: 12),
-                            OtpFields(
-                              length: 6,
-                              onCompleted: (otp) {
-                                debugPrint("Entered OTP: $otp");
-                                // verifyOtp(otp);
-                              },
+                child: BlocConsumer<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    if (state is AuthLoadingState) {
+                      DialogManager.instance.showLoadingDialog(context);
+                    }
+                    if (state is GetOtpSuccessState) {
+                      DialogManager.instance.hideLoadingDialog(context);
+                    }
+                    if (state is GetOtpErrorState) {
+                      DialogManager.instance.hideLoadingDialog(context);
+                      ToastService.showError(state.message);
+                    }
+                    if (state is VerifyOtpErrorState) {
+                      DialogManager.instance.hideLoadingDialog(context);
+                      ToastService.showError(state.message);
+                    }
+                    if (state is VerifyOtpSuccessState) {
+                      DialogManager.instance.hideLoadingDialog(context);
+                      context.go(PageRoutes.home);
+                    }
+                  },
+                  builder: (context, state) {
+                    return Form(
+                      key: _formKey,
+                      child: state is GetOtpSuccessState
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("LOGIN", style: AppFontStyles.h6(context)),
+                                const SizedBox(height: 12),
+                                Text(
+                                  "OTP has been sent to your phone number ${state.phone}.",
+                                  style: AppFontStyles.bodySmall(context),
+                                ),
+                                const SizedBox(height: 12),
+                                OtpFields(
+                                  length: 6,
+                                  onCompleted: (otp) {
+                                    debugPrint("Entered OTP: $otp");
+                                    setState(() {
+                                      otpValue = otp;
+                                    });
+                                  },
+                                ),
+                                MainButton(
+                                  buttonColor: AppColors.redColor,
+                                  buttonTitle: 'Login',
+                                  textStyle: TextStyle(color: Colors.white),
+                                  onPressed: verifyOtp(),
+                                ),
+                              ],
+                            )
+                          : LoginSection(
+                              controller: phoneController,
+                              onPressed: getOtp,
                             ),
-                          ],
-                        )
-                      : LoginSection(
-                          controller: phoneController,
-                          onPressed: getOtp,
-                        ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -84,11 +122,22 @@ class _LoginState extends State<Login> {
     );
   }
 
+  verifyOtp() {
+    if (otpValue.length < 6) {
+      ToastService.showError('Invalid OTP');
+      return;
+    }
+  }
+
   getOtp() {
     if (_formKey.currentState!.validate()) {
       if (phoneController.text.length < 10) {
         ToastService.showError('Invalid phone number');
+        return;
       }
+      context.read<AuthBloc>().add(
+        GetLoginOtpEvent(phoneNumber: phoneController.text),
+      );
     }
   }
 }

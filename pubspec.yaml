@@ -1,6 +1,6 @@
 name: ambuone_moblie
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -21,6 +21,7 @@ dependencies:
   permission_handler: ^12.0.1
   pull_to_refresh: ^2.0.0
   shared_preferences: ^2.5.3
+  pin_code_fields: ^8.0.1
 
 dev_dependencies:
   flutter_test:
@@ -30,9 +31,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-      - assets/
-      - assets/images/
-      - assets/fonts/
+    - assets/
+    - assets/images/
+    - assets/fonts/
   fonts:
     - family: Poppins
       fonts:

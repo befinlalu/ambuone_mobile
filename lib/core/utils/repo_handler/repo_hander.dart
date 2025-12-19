@@ -76,4 +76,40 @@ class RepositoryHandler {
     final response = await HttpServices().delete(endpoint, body: body);
     return fromJson(response);
   }
+  // ---------------- MULTIPART SUPPORT ----------------
+
+  Future<T?> handleMultipartPostRequest<T>({
+    required String endpoint,
+    required Map<String, String> fields,
+    Map<String, File>? files,
+    required T Function(Map<String, dynamic>) fromJson,
+  }) async {
+    final response = await HttpServices().postMultipart(
+      endpoint,
+      fields: fields,
+      files: files,
+    );
+
+    // In case API returns null (204 etc.)
+    if (response == null) return null;
+
+    return fromJson(response as Map<String, dynamic>);
+  }
+
+  Future<List<T>> handleMultipartPostListRequest<T>({
+    required String endpoint,
+    required Map<String, String> fields,
+    Map<String, File>? files,
+    required T Function(Map<String, dynamic>) fromJson,
+  }) async {
+    final response = await HttpServices().postMultipart(
+      endpoint,
+      fields: fields,
+      files: files,
+    );
+
+    return (response as List)
+        .map((item) => fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
 }

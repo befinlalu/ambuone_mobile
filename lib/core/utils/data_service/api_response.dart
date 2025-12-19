@@ -33,18 +33,21 @@ class ApiResponse<T> {
       return 'Something went wrong. Please try again.';
     }
 
-    // If API directly returns string
     if (json is String) {
       return json;
     }
 
     if (json is Map<String, dynamic>) {
-      // 1️⃣ Standard success message
+      // ✅ ADD THIS (for 429, 400, etc.)
+      if (json.containsKey('error')) {
+        return json['error'].toString();
+      }
+
+      // Existing logic
       if (json.containsKey('message')) {
         return json['message'].toString();
       }
 
-      // 2️⃣ Django REST non-field errors
       if (json.containsKey('non_field_errors')) {
         final errors = json['non_field_errors'];
         if (errors is List && errors.isNotEmpty) {
@@ -52,7 +55,6 @@ class ApiResponse<T> {
         }
       }
 
-      // 3️⃣ Field-based validation errors
       for (final value in json.values) {
         if (value is List && value.isNotEmpty) {
           return value.first.toString();

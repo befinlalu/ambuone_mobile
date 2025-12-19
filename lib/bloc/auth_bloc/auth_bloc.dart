@@ -54,6 +54,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final res = await authRepo.login(event.phoneNumber, event.otp);
 
       if (res.success) {
+        print("data:${res.data}");
         await SharedStorages().setAccessToken(res.data?.access ?? "");
         await SharedStorages().setRefreshToken(res.data?.refresh ?? "");
         await SharedStorages().setUser(res.data?.user);

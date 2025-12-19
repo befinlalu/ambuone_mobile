@@ -38,4 +38,16 @@ class AuthRepoImpli extends BaseRepository implements AuthRepo {
       );
     });
   }
+
+  @override
+  Future<ApiResponse<void>> register(RegisterModel registerForm) {
+    return apiCall<void>(() {
+      return _handler.handleMultipartPostRequest<Map<String, dynamic>>(
+        endpoint: '/api/users/register/subscriber/',
+        fields: registerForm.toFields(),
+        files: registerForm.toFiles(),
+        fromJson: (json) => json,
+      );
+    });
+  }
 }

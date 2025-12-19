@@ -10,7 +10,7 @@ class HttpServices {
       'Content-Type': 'application/json; charset=UTF-8',
     };
 
-    if (accessToken != null) {
+    if (accessToken != null && accessToken!.isNotEmpty) {
       headers['Authorization'] = 'Bearer $accessToken';
     }
 
@@ -151,6 +151,53 @@ class HttpServices {
     }
   }
 
+  Future<dynamic> postMultipart(
+    String endpoint, {
+    required Map<String, String> fields,
+    Map<String, File>? files, // key = field name
+    Map<String, String>? headers,
+  }) async {
+    final url = Uri.parse(baseUrl + endpoint);
+    debugPrint('url $url');
+
+    try {
+      final request = http.MultipartRequest('POST', url);
+
+      // Headers (DO NOT set Content-Type manually)
+      request.headers.addAll(
+        {..._defaultHeaders, ...?headers}..remove('Content-Type'),
+      );
+
+      // Add fields
+      request.fields.addAll(fields);
+
+      // Add files
+      if (files != null) {
+        for (final entry in files.entries) {
+          final file = entry.value;
+          final fieldName = entry.key;
+
+          request.files.add(
+            await http.MultipartFile.fromPath(fieldName, file.path),
+          );
+        }
+      }
+
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 60),
+      );
+
+      final response = await http.Response.fromStream(streamedResponse);
+      debugPrint('Response: ${response.body}');
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException('No Internet connection');
+    } on TimeoutException {
+      throw TimeoutException('Request timeout');
+    }
+  }
+
   dynamic _handleResponse(http.Response response) {
     debugPrint('Status code : ${response.statusCode}');
 
@@ -171,7 +218,6 @@ class HttpServices {
       case 204:
         return null;
 
-      // AUTH
       case 401:
         throw UnAuthenticateException(
           decodedBody ?? 'Unauthorized',
@@ -181,14 +227,13 @@ class HttpServices {
       case 403:
         throw UnAuthenticateException(decodedBody, response.statusCode);
 
-      // CLIENT ERRORS (Pass FULL JSON UP)
       case 400:
       case 404:
       case 405:
       case 422:
+      case 429:
         throw CustomException(decodedBody, response.statusCode);
 
-      // SERVER ERRORS
       case 500:
       case 502:
       case 503:

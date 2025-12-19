@@ -13,3 +13,4 @@ import 'package:go_router/go_router.dart';
 
 part "login.dart";
 part 'login_section.dart';
+part 'otp_section.dart';

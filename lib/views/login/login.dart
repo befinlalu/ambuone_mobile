@@ -10,7 +10,9 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController phoneController;
-  String otpValue = '';
+
+  bool showOtpSection = false;
+
   @override
   void initState() {
     super.initState();
@@ -26,6 +28,7 @@ class _LoginState extends State<Login> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // 🔵 Top Image Section
             SizedBox(
               height: size.height * 0.35,
               width: double.infinity,
@@ -33,19 +36,12 @@ class _LoginState extends State<Login> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(AppImages.authLogo, fit: BoxFit.cover),
-                  Container(
-                    color: const Color.fromARGB(
-                      255,
-                      0,
-                      0,
-                      0,
-                    ).withValues(alpha: 0.1),
-                  ),
+                  Container(color: Colors.black.withOpacity(0.1)),
                 ],
               ),
             ),
 
-            // ⚪ Login Card
+            // ⚪ Card Section
             Transform.translate(
               offset: const Offset(0, -40),
               child: Container(
@@ -53,25 +49,33 @@ class _LoginState extends State<Login> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
                 ),
                 child: BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
                     if (state is AuthLoadingState) {
                       DialogManager.instance.showLoadingDialog(context);
                     }
+
                     if (state is GetOtpSuccessState) {
                       DialogManager.instance.hideLoadingDialog(context);
+                      setState(() {
+                        showOtpSection = true;
+                      });
                     }
+
                     if (state is GetOtpErrorState) {
-                      debugPrint(state.message);
                       DialogManager.instance.hideLoadingDialog(context);
                       ToastService.showError(state.message);
                     }
+
                     if (state is VerifyOtpErrorState) {
                       DialogManager.instance.hideLoadingDialog(context);
                       ToastService.showError(state.message);
                     }
+
                     if (state is VerifyOtpSuccessState) {
                       DialogManager.instance.hideLoadingDialog(context);
                       context.go(PageRoutes.home);
@@ -80,33 +84,10 @@ class _LoginState extends State<Login> {
                   builder: (context, state) {
                     return Form(
                       key: _formKey,
-                      child: state is GetOtpSuccessState
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("LOGIN", style: AppFontStyles.h6(context)),
-                                const SizedBox(height: 12),
-                                Text(
-                                  "OTP has been sent to your phone number ${state.phone}.",
-                                  style: AppFontStyles.bodySmall(context),
-                                ),
-                                const SizedBox(height: 12),
-                                OtpFields(
-                                  length: 6,
-                                  onCompleted: (otp) {
-                                    debugPrint("Entered OTP: $otp");
-                                    setState(() {
-                                      otpValue = otp;
-                                    });
-                                  },
-                                ),
-                                MainButton(
-                                  buttonColor: AppColors.redColor,
-                                  buttonTitle: 'Login',
-                                  textStyle: TextStyle(color: Colors.white),
-                                  onPressed: verifyOtp(),
-                                ),
-                              ],
+                      child: showOtpSection
+                          ? OtpSection(
+                              phone: phoneController.text,
+                              onChangePhone: _onChangePhone,
                             )
                           : LoginSection(
                               controller: phoneController,
@@ -123,22 +104,24 @@ class _LoginState extends State<Login> {
     );
   }
 
-  verifyOtp() {
-    if (otpValue.length < 6) {
-      ToastService.showError('Invalid OTP');
-      return;
-    }
-  }
-
-  getOtp() {
+  // 📲 Get OTP
+  void getOtp() {
     if (_formKey.currentState!.validate()) {
       if (phoneController.text.length < 10) {
         ToastService.showError('Invalid phone number');
         return;
       }
+
       context.read<AuthBloc>().add(
         GetLoginOtpEvent(phoneNumber: phoneController.text),
       );
     }
+  }
+
+  void _onChangePhone() {
+    setState(() {
+      showOtpSection = false;
+      phoneController.clear();
+    });
   }
 }

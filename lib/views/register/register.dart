@@ -8,17 +8,13 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-  // Page Control
   final PageController _pageController = PageController();
   int _currentPage = 0;
   final int _totalPages = 7;
   final ImagePicker _picker = ImagePicker();
 
-  // Form Keys for each page
   final _formKeys = List.generate(7, (_) => GlobalKey<FormState>());
 
-  // --- CONTROLLERS ---
-  // Step 0: Personal
   final _fNameController = TextEditingController();
   final _lNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -26,7 +22,6 @@ class _RegisterState extends State<Register> {
   final _ageController = TextEditingController();
   String _gender = 'MALE';
 
-  // Step 1: Address
   final _addressController = TextEditingController();
   final _pinController = TextEditingController();
   String? _selectedState;
@@ -61,20 +56,16 @@ class _RegisterState extends State<Register> {
     'West Bengal',
   ];
 
-  // Step 2: Serial & Dates
   final _serialController = TextEditingController();
   DateTime startDate = DateTime.now();
 
-  // Step 3: Identification
   final _aadharNumController = TextEditingController();
   File? _photoFile;
   File? _aadharFile;
 
-  // Step 4: Emergency
   final _spouseNameController = TextEditingController();
   final _relativeNameController = TextEditingController();
 
-  // Step 5: Health
   final _healthController = TextEditingController();
   final _medicineController = TextEditingController();
 
@@ -114,7 +105,7 @@ class _RegisterState extends State<Register> {
 
   Future<void> _pickImage(bool isPhoto) async {
     final XFile? pickedFile = await _picker.pickImage(
-      source: isPhoto ? ImageSource.camera : ImageSource.gallery,
+      source: ImageSource.gallery,
       imageQuality: 50,
     );
     if (pickedFile != null) {
@@ -156,36 +147,34 @@ class _RegisterState extends State<Register> {
       return;
     }
     // Final logic to create your RegisterModel and call API
-    print("Registration Submitted!");
+    debugPrint("Registration Submitted!");
   }
-
-  // --- UI SECTIONS (PAGES) ---
 
   Widget _personalInfoForm() => Form(
     key: _formKeys[0],
     child: Column(
+      spacing: 10,
       children: [
-        TextFormField(
+        _imageUploadBox(_photoFile, "Photo", () => _pickImage(true)),
+        PrimaryTextFormField(
           controller: _fNameController,
-          decoration: const InputDecoration(labelText: "First Name"),
-          validator: (v) => v!.isEmpty ? 'Required' : null,
+          label: 'First Name',
+          validator: (v) => v!.isEmpty ? 'This field is required' : null,
         ),
-        TextFormField(
+        PrimaryTextFormField(
           controller: _lNameController,
-          decoration: const InputDecoration(labelText: "Last Name"),
-          validator: (v) => v!.isEmpty ? 'Required' : null,
+          label: 'Last Name',
+          validator: (v) => v!.isEmpty ? 'This field is required' : null,
         ),
-        TextFormField(
+        PrimaryTextFormField(
           controller: _phoneController,
-          decoration: const InputDecoration(labelText: "Phone"),
+          label: 'Phone Number',
+          validator: (v) => v!.isEmpty ? 'This field is required' : null,
           keyboardType: TextInputType.phone,
         ),
-        TextFormField(
-          controller: _emailController,
-          decoration: const InputDecoration(labelText: "Email"),
-        ),
+        PrimaryTextFormField(controller: _emailController),
         DropdownButtonFormField(
-          value: _gender,
+          initialValue: _gender,
           items: const [
             DropdownMenuItem(value: 'MALE', child: Text('Male')),
             DropdownMenuItem(value: 'FEMALE', child: Text('Female')),
@@ -201,18 +190,20 @@ class _RegisterState extends State<Register> {
     key: _formKeys[1],
     child: Column(
       children: [
-        TextFormField(
+        PrimaryTextFormField(
           controller: _addressController,
-          decoration: const InputDecoration(labelText: "Full Address"),
+          label: 'Address',
+          validator: (v) => v!.isEmpty ? 'This field is required' : null,
         ),
-        TextFormField(
+        PrimaryTextFormField(
           controller: _pinController,
-          decoration: const InputDecoration(labelText: "Pin Code"),
+          label: 'Pin Code',
+          validator: (v) => v!.isEmpty ? 'This field is required' : null,
           keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 15),
         DropdownButtonFormField<String>(
-          value: _selectedState,
+          initialValue: _selectedState,
           hint: const Text("Select State"),
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
@@ -222,7 +213,7 @@ class _RegisterState extends State<Register> {
               .map((s) => DropdownMenuItem(value: s, child: Text(s)))
               .toList(),
           onChanged: (v) => setState(() => _selectedState = v),
-          validator: (v) => v == null ? 'Please select a state' : null,
+          validator: (v) => v!.isEmpty ? 'This field is required' : null,
         ),
       ],
     ),
@@ -232,15 +223,15 @@ class _RegisterState extends State<Register> {
     key: _formKeys[3],
     child: Column(
       children: [
-        TextFormField(
+        PrimaryTextFormField(
           controller: _aadharNumController,
-          decoration: const InputDecoration(labelText: "Aadhar Number"),
+          label: 'Aadhar Number',
+          validator: (v) => v!.isEmpty ? 'This field is required' : null,
         ),
         const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _imageUploadBox(_photoFile, "Photo", () => _pickImage(true)),
             _imageUploadBox(_aadharFile, "Aadhar", () => _pickImage(false)),
           ],
         ),
@@ -279,15 +270,16 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Registration (${_currentPage + 1}/$_totalPages)"),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(6),
-          child: LinearProgressIndicator(
-            value: (_currentPage + 1) / _totalPages,
-          ),
-        ),
-      ),
+      // appBar: AppBar(
+      //   title: Text("Registration (${_currentPage + 1}/$_totalPages)"),
+      //   bottom: PreferredSize(
+      //     preferredSize: const Size.fromHeight(6),
+      //     child: LinearProgressIndicator(
+      //       value: (_currentPage + 1) / _totalPages,
+      //     ),
+      //   ),
+      // ),
+      appBar: CommonAppbar(title: 'AmbuOne', isLeading: false, isLogo: true),
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
@@ -350,30 +342,18 @@ class _RegisterState extends State<Register> {
   // Placeholders for remaining forms to keep code concise
   Widget _serialFormPlaceholder() => Form(
     key: _formKeys[2],
-    child: TextFormField(
-      controller: _serialController,
-      decoration: const InputDecoration(labelText: "Serial"),
-    ),
+    child: PrimaryTextFormField(controller: _serialController),
   );
   Widget _emergencyPlaceholder() => Form(
     key: _formKeys[4],
-    child: TextFormField(
-      controller: _spouseNameController,
-      decoration: const InputDecoration(labelText: "Spouse Name"),
-    ),
+    child: PrimaryTextFormField(controller: _spouseNameController),
   );
   Widget _healthPlaceholder() => Form(
     key: _formKeys[5],
-    child: TextFormField(
-      controller: _healthController,
-      decoration: const InputDecoration(labelText: "Health Issues"),
-    ),
+    child: PrimaryTextFormField(controller: _healthController),
   );
   Widget _finalPlaceholder() => Form(
     key: _formKeys[6],
-    child: TextFormField(
-      controller: _bankNameController,
-      decoration: const InputDecoration(labelText: "Bank Name"),
-    ),
+    child: PrimaryTextFormField(controller: _bankNameController),
   );
 }

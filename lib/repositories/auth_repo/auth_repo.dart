@@ -5,4 +5,5 @@ abstract class AuthRepo {
   Future<ApiResponse<LoginResponseModel>> login(String phoneNumber, String otp);
   Future<ApiResponse<void>> registerOtp(String phoneNumber);
   Future<ApiResponse<void>> register(RegisterModel registerForm);
+  Future<ApiResponse<void>> verfiySerial(String serial);
 }

@@ -9,6 +9,7 @@ class GetLoginOtpEvent extends AuthEvent {
 
 class GetRegisterOtpEvent extends AuthEvent {
   final String phoneNumber;
+
   GetRegisterOtpEvent({required this.phoneNumber});
 }
 
@@ -16,4 +17,14 @@ class VerifyLoginOtpEvent extends AuthEvent {
   final String phoneNumber;
   final String otp;
   VerifyLoginOtpEvent({required this.phoneNumber, required this.otp});
+}
+
+class VerifyRegisterOtpEvent extends AuthEvent {
+  final RegisterModel registerModel;
+  VerifyRegisterOtpEvent({required this.registerModel});
+}
+
+class VerfiySerialEvent extends AuthEvent {
+  final String serial;
+  VerfiySerialEvent({required this.serial});
 }

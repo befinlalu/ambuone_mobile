@@ -1,40 +1,26 @@
 part of 'index.dart';
 
-class PrimaryTextFormField extends StatelessWidget {
-  final TextEditingController? controller;
-  final FormFieldValidator<String?>? validator;
+class PrimaryDropdownFields<T> extends StatelessWidget {
+  final T? initialValue;
+  final List<DropdownMenuItem<T>> items;
+  final Function(T?)? onChanged;
+  final String? label;
   final String? hintText;
   final Widget? prefixWidget;
-  final Widget? suffixWidget;
-  final int maxLine;
+  final FormFieldValidator<T>? validator;
   final bool isBorderEnabled;
-  final Function(String)? onChanged;
-  final Function(String)? onSubmit;
-  final TextInputType? keyboardType;
-  final bool? enabled;
-  final int? maxLenth;
-  final bool isSearchTrailing;
-  final String? label;
-  final TextCapitalization textCapitalization;
+  final bool enabled;
 
-  final bool isCounterText;
-  const PrimaryTextFormField({
-    this.enabled,
-    this.keyboardType,
+  const PrimaryDropdownFields({
+    required this.items,
     this.onChanged,
-    this.onSubmit,
-    this.controller,
-    this.validator,
+    this.initialValue,
+    this.label,
     this.hintText,
     this.prefixWidget,
-    this.suffixWidget,
+    this.validator,
     this.isBorderEnabled = true,
-    this.maxLine = 1,
-    this.maxLenth,
-    this.isSearchTrailing = false,
-    this.isCounterText = false,
-    this.label,
-    this.textCapitalization = TextCapitalization.none,
+    this.enabled = true,
     super.key,
   });
 
@@ -42,35 +28,29 @@ class PrimaryTextFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      cursorColor: Theme.of(context).colorScheme.onPrimary,
-      enabled: enabled,
-      keyboardType: keyboardType,
-      onChanged: onChanged,
-      onFieldSubmitted: onSubmit,
+    return DropdownButtonFormField<T>(
+      initialValue: initialValue,
+      items: items,
+      onChanged: enabled ? onChanged : null,
       validator: validator,
-      controller: controller,
-      maxLines: maxLine,
-      maxLength: maxLenth,
-      textCapitalization: textCapitalization,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+
+      // Matches your TextFormField style
       style: AppFontStyles.bodySmall(context),
+      icon: Icon(
+        Icons.arrow_drop_down,
+        color: Theme.of(context).colorScheme.onPrimary,
+      ),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: AppFontStyles.bodySmallHint(context),
-        counter: isCounterText ? null : const SizedBox.shrink(),
-        counterStyle: TextStyle(
-          fontSize: 12,
-          color: Theme.of(context).colorScheme.tertiary,
-        ),
         hintText: hintText,
         hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSecondary),
-        alignLabelWithHint: true,
         prefixIcon: prefixWidget,
-        suffixIcon: suffixWidget,
         prefixIconColor: Theme.of(context).colorScheme.onPrimary,
         filled: isBorderEnabled,
         fillColor: Colors.transparent,
+        // Replicating your specific border logic
         border: isBorderEnabled
             ? OutlineInputBorder(
                 borderRadius: BorderRadius.circular(_kBorderRadius),
@@ -99,6 +79,9 @@ class PrimaryTextFormField extends StatelessWidget {
               )
             : null,
       ),
+      dropdownColor: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(_kBorderRadius),
+      menuMaxHeight: 300,
     );
   }
 }

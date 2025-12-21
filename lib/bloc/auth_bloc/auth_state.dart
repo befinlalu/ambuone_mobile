@@ -22,3 +22,19 @@ class VerifyOtpErrorState extends AuthState {
   final String message;
   VerifyOtpErrorState({required this.message});
 }
+
+class GetRegisterOtpSuccessState extends AuthState {}
+
+class VerfiyRegisterOtpSuccessState extends AuthState {}
+
+class RegisterErrorState extends AuthState {
+  final String message;
+  RegisterErrorState({required this.message});
+}
+
+class VerfiySerialSuccessState extends AuthState {}
+
+class VerfiySerialErrorState extends AuthState {
+  final String message;
+  VerfiySerialErrorState({required this.message});
+}

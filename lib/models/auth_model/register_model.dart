@@ -1,21 +1,23 @@
 part of 'index.dart';
 
 class RegisterModel {
-  // Required
-  final String email;
-  final String phoneNumber;
-  final String serialNumber;
-  final String firstName;
-  final String lastName;
-  final int age;
-  final String gender;
-  final String address;
-  final String pinCode;
-  final String state;
-  final String startDate;
-  final String aadharNumber;
-  final File photo;
-  final File aadharUpload;
+  // Required (business-wise, but nullable here)
+  final String? email;
+  final String? phoneNumber;
+  final String? serialNumber;
+  final String? firstName;
+  final String? lastName;
+  final int? age;
+  final String? gender;
+  final String? address;
+  final String? pinCode;
+  final String? state;
+  final String? startDate;
+  final String? aadharNumber;
+
+  // Files
+  final File? photo;
+  final File? aadharUpload;
 
   // Optional
   final String? otp;
@@ -43,23 +45,20 @@ class RegisterModel {
   final String? friend3Mobile;
 
   RegisterModel({
-    // Required
-    required this.email,
-    required this.phoneNumber,
-    required this.serialNumber,
-    required this.firstName,
-    required this.lastName,
-    required this.age,
-    required this.gender,
-    required this.address,
-    required this.pinCode,
-    required this.state,
-    required this.startDate,
-    required this.aadharNumber,
-    required this.photo,
-    required this.aadharUpload,
-
-    // Optional
+    this.email,
+    this.phoneNumber,
+    this.serialNumber,
+    this.firstName,
+    this.lastName,
+    this.age,
+    this.gender,
+    this.address,
+    this.pinCode,
+    this.state,
+    this.startDate,
+    this.aadharNumber,
+    this.photo,
+    this.aadharUpload,
     this.otp,
     this.healthConditions,
     this.medicines,
@@ -82,47 +81,71 @@ class RegisterModel {
     this.friend3Mobile,
   });
 
+  /// 🔐 SAFE: No null values go into Map<String, String>
   Map<String, String> toFields() {
-    return {
-      // Required
-      'email': email,
-      'phone_number': phoneNumber,
-      'serial_number': serialNumber,
-      'first_name': firstName,
-      'last_name': lastName,
-      'age': age.toString(),
-      'gender': gender,
-      'address': address,
-      'pin_code': pinCode,
-      'state': state,
-      'start_date': startDate,
-      'aadhar_number': aadharNumber,
+    final Map<String, String> data = {};
 
-      // Optional
-      if (otp != null) 'otp': otp!,
-      if (healthConditions != null) 'health_conditions': healthConditions!,
-      if (medicines != null) 'medicines': medicines!,
-      if (isReferrer != null) 'is_referrer': isReferrer.toString(),
-      if (referralCode != null) 'referral_code': referralCode!,
-      if (couponCode != null) 'coupon_code': couponCode!,
-      if (bankAccountNumber != null) 'bank_account_number': bankAccountNumber!,
-      if (bankName != null) 'bank_name': bankName!,
-      if (bankBranch != null) 'bank_branch': bankBranch!,
-      if (ifscCode != null) 'ifsc_code': ifscCode!,
-      if (spouseName != null) 'spouse_name': spouseName!,
-      if (spouseMobile != null) 'spouse_mobile': spouseMobile!,
-      if (relativeName != null) 'relative_name': relativeName!,
-      if (relativeMobile != null) 'relative_mobile': relativeMobile!,
-      if (friend1Name != null) 'friend1_name': friend1Name!,
-      if (friend1Mobile != null) 'friend1_mobile': friend1Mobile!,
-      if (friend2Name != null) 'friend2_name': friend2Name!,
-      if (friend2Mobile != null) 'friend2_mobile': friend2Mobile!,
-      if (friend3Name != null) 'friend3_name': friend3Name!,
-      if (friend3Mobile != null) 'friend3_mobile': friend3Mobile!,
-    };
+    void add(String key, String? value) {
+      if (value != null && value.isNotEmpty) {
+        data[key] = value;
+      }
+    }
+
+    add('email', email);
+    add('phone_number', phoneNumber);
+    add('serial_number', serialNumber);
+    add('first_name', firstName);
+    add('last_name', lastName);
+    if (age != null) data['age'] = age!.toString();
+    add('gender', gender);
+    add('address', address);
+    add('pin_code', pinCode);
+    add('state', state);
+    add('start_date', startDate);
+    add('aadhar_number', aadharNumber);
+
+    add('otp', otp);
+    add('health_conditions', healthConditions);
+    add('medicines', medicines);
+
+    if (isReferrer != null) {
+      data['is_referrer'] = isReferrer! ? 'true' : 'false';
+    }
+
+    add('referral_code', referralCode);
+    add('coupon_code', couponCode);
+
+    add('bank_account_number', bankAccountNumber);
+    add('bank_name', bankName);
+    add('bank_branch', bankBranch);
+    add('ifsc_code', ifscCode);
+
+    add('spouse_name', spouseName);
+    add('spouse_mobile', spouseMobile);
+    add('relative_name', relativeName);
+    add('relative_mobile', relativeMobile);
+
+    add('friend1_name', friend1Name);
+    add('friend1_mobile', friend1Mobile);
+    add('friend2_name', friend2Name);
+    add('friend2_mobile', friend2Mobile);
+    add('friend3_name', friend3Name);
+    add('friend3_mobile', friend3Mobile);
+
+    return data;
   }
 
+  /// 📎 SAFE: Only non-null files are added
   Map<String, File> toFiles() {
-    return {'photo': photo, 'aadhar_upload': aadharUpload};
+    final files = <String, File>{};
+
+    if (photo != null) {
+      files['photo'] = photo!;
+    }
+    if (aadharUpload != null) {
+      files['aadhar_upload'] = aadharUpload!;
+    }
+
+    return files;
   }
 }

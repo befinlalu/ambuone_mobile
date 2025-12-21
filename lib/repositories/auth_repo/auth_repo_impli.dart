@@ -50,4 +50,14 @@ class AuthRepoImpli extends BaseRepository implements AuthRepo {
       );
     });
   }
+
+  @override
+  Future<ApiResponse<void>> verfiySerial(String serial) async {
+    return apiCall<void>(() {
+      return _handler.handleGetRequest<Map<String, dynamic>>(
+        endpoint: '/api/qr/check-serial/$serial/',
+        fromJson: (json) => json,
+      );
+    });
+  }
 }

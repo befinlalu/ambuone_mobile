@@ -18,4 +18,8 @@ abstract class Storage {
   User? getUser();
 
   Future<void> setUser(User? user);
+
+  UserDetails? getUserDetails();
+
+  Future<void> setUserDetails(UserDetails? userDetails);
 }

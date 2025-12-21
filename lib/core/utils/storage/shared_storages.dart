@@ -4,6 +4,7 @@ class _StorageKeys {
   static const String accessToken = 'access-token';
   static const String refreshToken = 'refresh-token';
   static const String user = 'user';
+  static const String userDetails = 'user-details';
 }
 
 class SharedStorages implements Storage {
@@ -85,5 +86,15 @@ class SharedStorages implements Storage {
   @override
   Future<void> setUser(User? user) {
     return _setJsonObject(_StorageKeys.user, user);
+  }
+
+  @override
+  UserDetails? getUserDetails() {
+    return _getJsonObject(_StorageKeys.userDetails, UserDetails.fromJson);
+  }
+
+  @override
+  Future<void> setUserDetails(UserDetails? userDetails) {
+    return _setJsonObject(_StorageKeys.userDetails, userDetails);
   }
 }

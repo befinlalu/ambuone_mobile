@@ -12,7 +12,11 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(path: PageRoutes.welcome, builder: (context, state) => Welcome()),
 
-    GoRoute(path: PageRoutes.home, builder: (context, state) => Home()),
+    GoRoute(
+      path: PageRoutes.home,
+      builder: (context, state) =>
+          BlocProvider(create: (context) => sl<HomeBloc>(), child: Home()),
+    ),
 
     GoRoute(
       path: PageRoutes.login,

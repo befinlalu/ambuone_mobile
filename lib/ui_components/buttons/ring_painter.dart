@@ -8,22 +8,31 @@ class RingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
-    final radius = size.width / 2 - 8;
+    final radius = size.width / 2 - 10;
 
-    final paint = Paint()
-      ..color = Colors.red.withOpacity(0.4)
+    final backgroundPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.2)
+      ..strokeWidth = 8
+      ..style = PaintingStyle.stroke;
+
+    final progressPaint = Paint()
+      ..shader = const SweepGradient(
+        colors: [Color(0xffff5252), Color(0xffff1744)],
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ..strokeWidth = 8
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 10
       ..strokeCap = StrokeCap.round;
 
-    final angle = 2 * pi * progress;
+    // Background ring
+    canvas.drawCircle(center, radius, backgroundPaint);
 
+    // Progress arc
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi / 2,
-      angle,
+      2 * pi * progress,
       false,
-      paint,
+      progressPaint,
     );
   }
 

@@ -33,23 +33,19 @@ class _SOSButtonState extends State<SOSButton>
   void _startHold() {
     setState(() => isHolding = true);
     _controller.forward(from: 0);
-
-    // subtle haptic on start
     HapticFeedback.lightImpact();
   }
 
   void _cancelHold() {
     setState(() => isHolding = false);
+    // ToastService.showError('SOS cancelled');
     _controller.reset();
   }
 
-  void _completeSOS() async {
+  void _completeSOS() {
     _controller.stop();
     setState(() => isHolding = false);
-
-    // strong haptic on success
     HapticFeedback.heavyImpact();
-
     widget.onCompleted();
   }
 
@@ -65,39 +61,91 @@ class _SOSButtonState extends State<SOSButton>
       onLongPressStart: (_) => _startHold(),
       onLongPressEnd: (_) => _cancelHold(),
       child: SizedBox(
-        width: 200,
-        height: 200,
+        width: 220,
+        height: 220,
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // 🔵 Progress Ring
+            // 🔵 PROGRESS RING
             AnimatedBuilder(
               animation: _controller,
-              builder: (context, child) {
+              builder: (context, _) {
                 return CustomPaint(
-                  size: const Size(200, 200),
+                  size: const Size(220, 220),
                   painter: RingPainter(_controller.value),
                 );
               },
             ),
 
-            // 🔴 SOS Button
-            Container(
-              width: 120,
-              height: 120,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Color(0xfff44336), Color(0xffd32f2f)],
+            // 🔴 3D SOS BUTTON
+            AnimatedScale(
+              scale: isHolding ? 0.95 : 1.0,
+              duration: const Duration(milliseconds: 150),
+              child: Container(
+                width: 130,
+                height: 130,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const RadialGradient(
+                    center: Alignment.topLeft,
+                    radius: 1.2,
+                    colors: [Color(0xffff6b6b), Color(0xffd32f2f)],
+                  ),
+                  boxShadow: [
+                    // Bottom depth
+                    BoxShadow(
+                      color: Colors.black.withAlpha(35),
+                      offset: const Offset(0, 8),
+                      blurRadius: 16,
+                    ),
+                    // Top highlight
+                    BoxShadow(
+                      color: Colors.white.withAlpha(25),
+                      offset: const Offset(-4, -4),
+                      blurRadius: 8,
+                    ),
+                  ],
                 ),
-              ),
-              alignment: Alignment.center,
-              child: const Text(
-                "SOS",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Inner shadow when pressed
+                    if (isHolding)
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(25),
+                              offset: const Offset(2, 2),
+                              blurRadius: 6,
+                              spreadRadius: -2,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(
+                          Icons.wifi_tethering,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "SOS",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),

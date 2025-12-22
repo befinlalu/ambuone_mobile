@@ -11,7 +11,13 @@ class _SosPageState extends State<SosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: SOSButton(onCompleted: () {})),
+      body: Center(
+        child: SOSButton(
+          onCompleted: () {
+            ToastService.showError('Alert Sent successfully.');
+          },
+        ),
+      ),
     );
   }
 }

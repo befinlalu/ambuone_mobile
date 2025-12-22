@@ -39,11 +39,11 @@ class SosForegroundService : Service() {
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setOngoing(true)               // 🔥 Cannot swipe away
+            .setOngoing(true)
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
             .setContentIntent(pendingIntent)
-            .setFullScreenIntent(pendingIntent, true) // 🔥 Lock screen
+            .setFullScreenIntent(pendingIntent, true)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)

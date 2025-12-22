@@ -12,6 +12,7 @@ class SosForegroundService : Service() {
     companion object {
         const val CHANNEL_ID = "sos_foreground_channel"
         const val NOTIFICATION_ID = 999
+        var shouldRestart: Boolean = true
     }
 
     override fun onCreate() {
@@ -32,6 +33,15 @@ class SosForegroundService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val deleteIntent = Intent(this, SosNotificationDismissedReceiver::class.java)
+        val deletePendingIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            deleteIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Emergency SOS Active")
@@ -43,11 +53,22 @@ class SosForegroundService : Service() {
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
             .setContentIntent(pendingIntent)
+            .setDeleteIntent(deletePendingIntent)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)
 
         return START_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        if (shouldRestart) {
+            val restartIntent =
+                Intent(applicationContext, SosForegroundService::class.java)
+            restartIntent.setPackage(packageName)
+            startService(restartIntent)
+        }
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {

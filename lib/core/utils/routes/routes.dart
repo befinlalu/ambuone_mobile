@@ -33,7 +33,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/lock-sos',
       builder: (context, state) => BlocProvider(
-        create: (context) => sl<AuthBloc>(),
+        create: (context) => sl<HomeBloc>(),
         child: const SosPage(),
       ),
     ),

@@ -91,30 +91,24 @@ class _HomeState extends State<Home> {
               ),
             );
           }
-          return Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text('Emergency Help', style: AppFontStyles.h3(context)),
-              Text('Needed?', style: AppFontStyles.h3(context)),
-              MainButton(
-                icon: Icons.lock,
-                buttonColor: Theme.of(context).colorScheme.secondary,
-                buttonTitle: 'Enable Lock Screen SOS',
-                onPressed: () async {
-                  await LockSosService.startSos();
-                  // LockSosService.enableLockSos(context);
-                },
-              ),
-
-              SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [SOSButton(onCompleted: sendAlert)],
-              ),
-            ],
+          return PageCanvas(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text('Emergency Help', style: AppFontStyles.h3(context)),
+                Text('Needed?', style: AppFontStyles.h3(context)),
+                SizedBox(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [SOSButton(onCompleted: sendAlert)],
+                ),
+                SizedBox(height: 80),
+                LockSosToggle(),
+              ],
+            ),
           );
         },
       ),
@@ -122,7 +116,6 @@ class _HomeState extends State<Home> {
   }
 
   sendAlert() {
-    print('Check');
     context.read<HomeBloc>().add(GetLocationEvent());
   }
 }

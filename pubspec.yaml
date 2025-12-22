@@ -33,6 +33,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   package_rename: ^1.10.1
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -56,3 +57,13 @@ package_rename_config:
   android:
     app_name: "Ambuone"
     package_name: "com.ambuone.prod"
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+
+  image_path_android: assets/images/ambuone_icon.png
+  image_path_ios: assets/images/ambuone_icon.png
+
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/images/ambuone_icon.png

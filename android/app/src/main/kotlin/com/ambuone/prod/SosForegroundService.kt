@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import android.graphics.BitmapFactory
 
 class SosForegroundService : Service() {
 
@@ -44,7 +45,10 @@ class SosForegroundService : Service() {
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Emergency SOS Active")
+            .setLargeIcon(
+                BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+            )
+            .setContentTitle("AmbuOne Emergency SOS Active")
             .setContentText("Tap to open SOS screen")
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setPriority(NotificationCompat.PRIORITY_MAX)

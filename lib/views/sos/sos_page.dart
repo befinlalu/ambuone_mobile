@@ -50,6 +50,10 @@ class _SosPageState extends State<SosPage> {
               context,
               message: 'Alert sent successfully',
             );
+
+            Future.delayed(const Duration(seconds: 2), () {
+              DialogManager.instance.hideLoadingDialog(context);
+            });
           }
           if (state is SendAlertErrorState) {
             DialogManager.instance.hideLoadingDialog(context);

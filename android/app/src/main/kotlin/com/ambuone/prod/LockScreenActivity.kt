@@ -10,17 +10,13 @@ class LockScreenActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Show over lock screen
-        setShowWhenLocked(true)
-        setTurnScreenOn(true)
+        setShowWhenLocked(true)     // show over lock
+        setTurnScreenOn(true)       // wake screen
 
-        val keyguardManager =
-            getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-
-        keyguardManager.requestDismissKeyguard(this, null)
     }
 
     override fun getInitialRoute(): String {
         return "/lock-sos"
     }
 }
+

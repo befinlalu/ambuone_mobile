@@ -4,6 +4,7 @@ import android.content.Intent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import android.util.Log
 
 class MainActivity : FlutterActivity() {
 
@@ -19,6 +20,7 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
 
                 "startSosService" -> {
+                    Log.d("SOS_FLOW", "startSosService received in MainActivity")
                     val intent = Intent(this, SosForegroundService::class.java)
                     startForegroundService(intent)
                     result.success(true)

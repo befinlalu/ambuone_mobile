@@ -43,7 +43,6 @@ class SosForegroundService : Service() {
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
             .setContentIntent(pendingIntent)
-            .setFullScreenIntent(pendingIntent, true)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)

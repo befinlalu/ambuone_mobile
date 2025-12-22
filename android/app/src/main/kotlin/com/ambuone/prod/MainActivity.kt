@@ -1,5 +1,6 @@
 package com.ambuone.prod
 
+import android.content.Intent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -17,13 +18,15 @@ class MainActivity : FlutterActivity() {
         ).setMethodCallHandler { call, result ->
             when (call.method) {
 
-                "enableLockSos" -> {
-                    LockSosShortcut.request(this)
+                "startSosService" -> {
+                    val intent = Intent(this, SosForegroundService::class.java)
+                    startForegroundService(intent)
                     result.success(true)
                 }
 
-                "showSosNotification" -> {
-                    SosNotificationHelper.show(this)
+                "stopSosService" -> {
+                    val intent = Intent(this, SosForegroundService::class.java)
+                    stopService(intent)
                     result.success(true)
                 }
 
@@ -32,3 +35,4 @@ class MainActivity : FlutterActivity() {
         }
     }
 }
+

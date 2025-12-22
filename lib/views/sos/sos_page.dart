@@ -11,13 +11,7 @@ class _SosPageState extends State<SosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SOSButton(
-          onCompleted: () {
-            print('Check');
-          },
-        ),
-      ),
+      body: Center(child: SOSButton(onCompleted: () {})),
     );
   }
 }

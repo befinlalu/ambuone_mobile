@@ -40,12 +40,15 @@ object SosNotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Emergency SOS")
-            .setContentText("Tap to open SOS")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentTitle("Emergency SOS Active")
+            .setContentText("Tap to open SOS screen")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_CALL)
-            .setFullScreenIntent(pendingIntent, true) // 🔥 KEY
-            .setAutoCancel(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setOngoing(true)
+            .setAutoCancel(false)
+            .setOnlyAlertOnce(true)
+            .setFullScreenIntent(pendingIntent, true)
             .build()
 
         manager.notify(101, notification)

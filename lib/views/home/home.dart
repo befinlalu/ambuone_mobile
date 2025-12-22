@@ -102,8 +102,9 @@ class _HomeState extends State<Home> {
                 icon: Icons.lock,
                 buttonColor: Theme.of(context).colorScheme.secondary,
                 buttonTitle: 'Enable Lock Screen SOS',
-                onPressed: () {
-                  LockSosService.enableLockSos(context);
+                onPressed: () async {
+                  await LockSosService.startSos();
+                  // LockSosService.enableLockSos(context);
                 },
               ),
 

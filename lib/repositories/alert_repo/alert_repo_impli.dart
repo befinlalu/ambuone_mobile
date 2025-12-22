@@ -8,7 +8,7 @@ class AlertRepoImpli extends BaseRepository implements AlertRepo {
   ) async {
     return apiCall<AlertResponseModel>(() {
       return _handler.handlePostRequest(
-        endpoint: '/api/users/login/otp-verify/',
+        endpoint: '/api/qr/emergency-alert/direct/',
         body: alert.toJson(),
         fromJson: (json) => AlertResponseModel.fromJson(json),
       );

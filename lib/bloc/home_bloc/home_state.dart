@@ -27,3 +27,16 @@ class SendAlertErrorState extends HomeState {
   final String message;
   SendAlertErrorState({required this.message});
 }
+
+class GetLocationLoadingState extends HomeState {}
+
+class GetLocationSuccessState extends HomeState {
+  final double latitude;
+  final double longitude;
+  GetLocationSuccessState({required this.latitude, required this.longitude});
+}
+
+class GetLocationErrorState extends HomeState {
+  final String message;
+  GetLocationErrorState({required this.message});
+}

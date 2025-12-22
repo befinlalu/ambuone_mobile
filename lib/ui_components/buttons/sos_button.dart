@@ -23,8 +23,8 @@ class _SOSButtonState extends State<SOSButton>
       duration: const Duration(seconds: 5),
     );
 
-    _controller.addListener(() {
-      if (_controller.value >= 1.0) {
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
         _completeSOS();
       }
     });
@@ -38,13 +38,16 @@ class _SOSButtonState extends State<SOSButton>
 
   void _cancelHold() {
     setState(() => isHolding = false);
-    // ToastService.showError('SOS cancelled');
+    ToastService.showError('SOS cancelled');
     _controller.reset();
   }
 
   void _completeSOS() {
     _controller.stop();
+    _controller.reset();
+
     setState(() => isHolding = false);
+
     HapticFeedback.heavyImpact();
     widget.onCompleted();
   }

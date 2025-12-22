@@ -6,6 +6,7 @@ import 'package:ambuone_moblie/index.dart';
 import 'package:ambuone_moblie/views/home/index.dart';
 import 'package:ambuone_moblie/views/login/index.dart';
 import 'package:ambuone_moblie/views/register/index.dart';
+import 'package:ambuone_moblie/views/sos/index.dart';
 import 'package:ambuone_moblie/views/splash/index.dart';
 import 'package:ambuone_moblie/views/welcome/index.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

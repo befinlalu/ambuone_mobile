@@ -41,6 +41,29 @@ class _HomeState extends State<Home> {
               message: 'Please wait. Sending alert ....',
             );
           }
+          if (state is GetLocationLoadingState) {
+            DialogManager.instance.showLoadingDialog(
+              context,
+              message: 'Please wait. Fetching Location ....',
+            );
+          }
+          if (state is GetLocationErrorState) {
+            DialogManager.instance.hideLoadingDialog(context);
+            ToastService.showSuccess(context, state.message);
+          }
+
+          if (state is GetLocationSuccessState) {
+            DialogManager.instance.hideLoadingDialog(context);
+            context.read<HomeBloc>().add(
+              SendAlertEvent(
+                alertRequest: AlertRequestModel(
+                  latitude: state.latitude,
+                  longitude: state.longitude,
+                  serialNumber: userDetails?.qrcode?.serialNumber,
+                ),
+              ),
+            );
+          }
           if (state is SendAlertSuccessState) {
             DialogManager.instance.hideLoadingDialog(context);
             ToastService.showSuccess(context, 'Alert Sent Successfully');
@@ -75,6 +98,15 @@ class _HomeState extends State<Home> {
             children: [
               Text('Emergency Help', style: AppFontStyles.h3(context)),
               Text('Needed?', style: AppFontStyles.h3(context)),
+              MainButton(
+                icon: Icons.lock,
+                buttonColor: Theme.of(context).colorScheme.secondary,
+                buttonTitle: 'Enable Lock Screen SOS',
+                onPressed: () {
+                  LockSosService.enableLockSos(context);
+                },
+              ),
+
               SizedBox(height: 40),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -88,25 +120,8 @@ class _HomeState extends State<Home> {
     );
   }
 
-  sendAlert() async {
-    try {
-      // 1️⃣ Request permission
-      final hasPermission = await PermissionService.requestLocationPermission();
-
-      if (!hasPermission) {
-        debugPrint("❌ Location permission not granted");
-        return;
-      }
-
-      // 2️⃣ Get location
-      final position = await LocationService.getCurrentLocation();
-
-      final lat = position.latitude;
-      final lng = position.longitude;
-
-      debugPrint("📍 SOS Location: $lat , $lng");
-    } catch (e) {
-      debugPrint("❌ SOS Error: $e");
-    }
+  sendAlert() {
+    print('Check');
+    context.read<HomeBloc>().add(GetLocationEvent());
   }
 }

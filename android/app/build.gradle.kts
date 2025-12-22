@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.ambuone_moblie"
+    namespace = "com.ambuone.prod"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,8 +20,9 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.ambuone_moblie"
+        applicationId = "com.ambuone.prod"
         ndkVersion = "27.0.12077973"
+        minSdk = flutter.minSdkVersion
         compileSdk = 36
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion

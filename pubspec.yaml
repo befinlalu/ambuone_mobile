@@ -32,6 +32,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  package_rename: ^1.10.1
 
 flutter:
   uses-material-design: true
@@ -50,3 +51,8 @@ flutter:
           weight: 600
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 700
+
+package_rename_config:
+  android:
+    app_name: "Ambuone"
+    package_name: "com.ambuone.prod"

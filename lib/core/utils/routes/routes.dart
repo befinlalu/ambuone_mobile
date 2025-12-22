@@ -29,6 +29,14 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) =>
           BlocProvider(create: (context) => sl<AuthBloc>(), child: Register()),
     ),
+
+    GoRoute(
+      path: '/lock-sos',
+      builder: (context, state) => BlocProvider(
+        create: (context) => sl<AuthBloc>(),
+        child: const SosPage(),
+      ),
+    ),
   ],
   redirect: (context, state) async {
     final token = SharedStorages().getAccessToken();

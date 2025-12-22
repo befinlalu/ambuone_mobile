@@ -7,6 +7,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeEvent>((event, emit) {});
     on<GetUserDetailsEvent>(getUserDetails);
     on<SendAlertEvent>(sendAlert);
+    on<GetLocationEvent>(getLocation);
   }
 
   FutureOr<void> getUserDetails(
@@ -42,6 +43,29 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       }
     } catch (e) {
       emit(SendAlertErrorState(message: e.toString()));
+    }
+  }
+
+  FutureOr<void> getLocation(
+    GetLocationEvent event,
+    Emitter<HomeState> emit,
+  ) async {
+    emit(GetLocationLoadingState());
+    try {
+      final hasPermission = await PermissionService.requestLocationPermission();
+
+      if (!hasPermission) {
+        emit(GetLocationErrorState(message: "Location permission not granted"));
+        return;
+      }
+
+      final position = await LocationService.getCurrentLocation();
+      final double lat = double.parse(position.latitude.toStringAsFixed(6));
+      final double long = double.parse(position.longitude.toStringAsFixed(6));
+
+      emit(GetLocationSuccessState(latitude: lat, longitude: long));
+    } catch (e) {
+      emit(GetLocationErrorState(message: e.toString()));
     }
   }
 }

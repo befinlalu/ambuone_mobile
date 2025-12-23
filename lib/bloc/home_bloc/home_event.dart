@@ -14,4 +14,7 @@ class SendAlertEvent extends HomeEvent {
   SendAlertEvent({required this.alertRequest});
 }
 
-class GetLocationEvent extends HomeEvent {}
+class GetLocationEvent extends HomeEvent {
+  final BuildContext context;
+  GetLocationEvent(this.context);
+}

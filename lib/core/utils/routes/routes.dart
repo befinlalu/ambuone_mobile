@@ -37,6 +37,14 @@ final GoRouter appRouter = GoRouter(
         child: const SosPage(),
       ),
     ),
+
+    GoRoute(
+      path: PageRoutes.profile,
+      builder: (context, state) {
+        final user = state.extra as UserDetails;
+        return UserDetailsPage(user: user);
+      },
+    ),
   ],
   redirect: (context, state) async {
     final token = SharedStorages().getAccessToken();

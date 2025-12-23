@@ -53,6 +53,10 @@ class UserDetails {
 }
 
 class UserProfile {
+  // Personal Details
+
+  final String? photo;
+  final String? startDate;
   final int? id;
   final String? endingDate;
   final String? address;
@@ -61,11 +65,15 @@ class UserProfile {
   final String? gender;
   final String? state;
 
+  // Identification Details
+  final String? aadharUpload;
+  final String? insuranceCardUpload;
+
+  // Emergency Contacts
   final String? spouseName;
   final String? spouseMobile;
   final String? relativeName;
   final String? relativeMobile;
-
   final String? friend1Name;
   final String? friend1Mobile;
   final String? friend2Name;
@@ -73,11 +81,9 @@ class UserProfile {
   final String? friend3Name;
   final String? friend3Mobile;
 
+  // Medical Details
   final String? healthConditions;
   final String? medicines;
-
-  final String? photo;
-  final String? startDate;
 
   final bool? isReferrer;
   final String? bankAccountNumber;
@@ -85,9 +91,6 @@ class UserProfile {
   final String? bankName;
   final String? bankBranch;
   final String? referralCode;
-
-  final String? aadharUpload;
-  final String? insuranceCardUpload;
 
   final int? user;
   final String? appliedCoupon;

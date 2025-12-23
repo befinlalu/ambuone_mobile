@@ -64,7 +64,7 @@ class _SosPageState extends State<SosPage> {
           return Center(
             child: SOSButton(
               onCompleted: () {
-                context.read<HomeBloc>().add(GetLocationEvent());
+                context.read<HomeBloc>().add(GetLocationEvent(context));
               },
             ),
           );

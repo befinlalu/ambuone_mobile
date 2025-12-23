@@ -6,4 +6,5 @@ class PageRoutes {
   static const String login = "/login";
   static const String register = "/register";
   static const home = "/home";
+  static const profile = "/profile";
 }

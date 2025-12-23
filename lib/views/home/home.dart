@@ -20,7 +20,13 @@ class _HomeState extends State<Home> {
       context.read<HomeBloc>().add(
         GetUserDetailsEvent(
           userId: user?.id ?? 0,
-          type: userDetails != null ? 'U' : 'G',
+          type:
+              userDetails != null &&
+                  userDetails?.id != null &&
+                  userDetails?.firstName != null &&
+                  userDetails?.firstName?.isNotEmpty == true
+              ? 'U'
+              : 'G',
         ),
       );
     } else {
@@ -72,7 +78,11 @@ class _HomeState extends State<Home> {
             DialogManager.instance.hideLoadingDialog(context);
             ToastService.showSuccess(context, state.message);
           }
-          if (state is GetUserSuccessState) {}
+          if (state is GetUserSuccessState) {
+            setState(() {
+              userDetails = state.userDetails;
+            });
+          }
         },
         builder: (context, state) {
           if (state is GetUserLoadingState && state.type == 'G') {
@@ -94,16 +104,49 @@ class _HomeState extends State<Home> {
           return PageCanvas(
             child: Column(
               mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('Emergency Help', style: AppFontStyles.h3(context)),
-                Text('Needed?', style: AppFontStyles.h3(context)),
-                SizedBox(height: 40),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [SOSButton(onCompleted: sendAlert)],
+                GestureDetector(
+                  onTap: () {
+                    context.push(PageRoutes.profile, extra: userDetails);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        width: 1.5,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: NetworkImage(
+                          userDetails?.profile?.photo ?? '',
+                        ),
+                      ),
+                      title: Text(
+                        "${userDetails?.firstName} ${userDetails?.lastName}",
+                        style: AppFontStyles.bodySmallBold(context),
+                      ),
+                      subtitle: Text(
+                        "${userDetails?.phoneNumber}",
+                        style: AppFontStyles.bodySmallHint(context),
+                      ),
+                      trailing: Icon(Icons.arrow_outward_rounded),
+                    ),
+                  ),
+                ),
+                Column(
+                  children: [
+                    Text('Emergency Help', style: AppFontStyles.h3(context)),
+                    Text('Needed?', style: AppFontStyles.h3(context)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [SOSButton(onCompleted: sendAlert)],
+                    ),
+                  ],
                 ),
                 SizedBox(height: 80),
                 LockSosToggle(),
@@ -116,6 +159,6 @@ class _HomeState extends State<Home> {
   }
 
   sendAlert() {
-    context.read<HomeBloc>().add(GetLocationEvent());
+    context.read<HomeBloc>().add(GetLocationEvent(context));
   }
 }

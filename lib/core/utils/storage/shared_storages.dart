@@ -5,6 +5,7 @@ class _StorageKeys {
   static const String refreshToken = 'refresh-token';
   static const String user = 'user';
   static const String userDetails = 'user-details';
+  static const String sosStatus = 'sos-status';
 }
 
 class SharedStorages implements Storage {
@@ -96,5 +97,15 @@ class SharedStorages implements Storage {
   @override
   Future<void> setUserDetails(UserDetails? userDetails) {
     return _setJsonObject(_StorageKeys.userDetails, userDetails);
+  }
+
+  @override
+  bool getSosStatus() {
+    return _preferences.getBool(_StorageKeys.sosStatus) ?? false;
+  }
+
+  @override
+  Future<void> setSosStatus(bool value) async {
+    await _preferences.setBool(_StorageKeys.sosStatus, value);
   }
 }

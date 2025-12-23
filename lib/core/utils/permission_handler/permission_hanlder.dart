@@ -1,36 +1,81 @@
 part of 'index.dart';
 
 class PermissionService {
-  /// Request location permission
-  static Future<bool> requestLocationPermission() async {
-    PermissionStatus status = await Permission.location.status;
+  static Future<bool> requestLocationPermissions() async {
+    // Foreground permission
+    PermissionStatus whenInUse = await Permission.locationWhenInUse.status;
 
-    if (status.isGranted) {
-      return true;
+    if (!whenInUse.isGranted) {
+      whenInUse = await Permission.locationWhenInUse.request();
+      if (!whenInUse.isGranted) return false;
     }
 
-    if (status.isDenied) {
-      status = await Permission.location.request();
-      return status.isGranted;
+    // Background permission (important for SOS)
+    PermissionStatus always = await Permission.locationAlways.status;
+    if (!always.isGranted) {
+      always = await Permission.locationAlways.request();
     }
 
-    if (status.isPermanentlyDenied) {
-      await openAppSettings();
-      return false;
-    }
-
-    return false;
+    return whenInUse.isGranted;
   }
 }
 
+Future<bool> showEnableGpsDialog(BuildContext context) async {
+  return await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Enable Location'),
+          content: const Text(
+            'Location services are required to continue. Please turn on GPS.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Enable'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+}
+
 class LocationService {
-  static Future<Position> getCurrentLocation() async {
+  static Future<Position> getCurrentLocation(BuildContext context) async {
+    // 1️⃣ Check permissions
+    final hasPermission = await PermissionService.requestLocationPermissions();
+
+    if (!hasPermission) {
+      throw Exception('Location permission denied');
+    }
+
+    // 2️⃣ Check GPS
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
     if (!serviceEnabled) {
-      throw Exception('Location service disabled');
+      final shouldOpenSettings = await showEnableGpsDialog(context);
+
+      if (!shouldOpenSettings) {
+        throw Exception('GPS not enabled by user');
+      }
+
+      // Open system settings
+      await Geolocator.openLocationSettings();
+
+      // Wait & retry
+      await Future.delayed(const Duration(seconds: 3));
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+      if (!serviceEnabled) {
+        throw Exception('GPS still disabled');
+      }
     }
 
+    // 3️⃣ Get location
     return await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );

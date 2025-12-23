@@ -51,21 +51,30 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     Emitter<HomeState> emit,
   ) async {
     emit(GetLocationLoadingState());
+
     try {
-      final hasPermission = await PermissionService.requestLocationPermission();
+      // 1️⃣ Request permission (foreground + background)
+      final hasPermission =
+          await PermissionService.requestLocationPermissions();
 
       if (!hasPermission) {
-        emit(GetLocationErrorState(message: "Location permission not granted"));
+        emit(GetLocationErrorState(message: 'Location permission not granted'));
         return;
       }
 
-      final position = await LocationService.getCurrentLocation();
+      // 2️⃣ Get location (handles GPS OFF + dialog)
+      final position = await LocationService.getCurrentLocation(event.context);
+
       final double lat = double.parse(position.latitude.toStringAsFixed(6));
       final double long = double.parse(position.longitude.toStringAsFixed(6));
 
       emit(GetLocationSuccessState(latitude: lat, longitude: long));
     } catch (e) {
-      emit(GetLocationErrorState(message: e.toString()));
+      emit(
+        GetLocationErrorState(
+          message: e.toString().replaceAll('Exception: ', ''),
+        ),
+      );
     }
   }
 }

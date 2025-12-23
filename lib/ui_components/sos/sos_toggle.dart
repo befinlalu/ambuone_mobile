@@ -18,7 +18,7 @@ class _LockSosToggleState extends State<LockSosToggle> {
   }
 
   Future<void> _loadState() async {
-    _enabled = await SosState.isActive();
+    _enabled = SharedStorages().getSosStatus();
     setState(() => _loading = false);
   }
 
@@ -27,8 +27,10 @@ class _LockSosToggleState extends State<LockSosToggle> {
 
     if (value) {
       await LockSosService.startSos();
+      SharedStorages().setSosStatus(true);
     } else {
       await LockSosService.stopSos();
+      SharedStorages().setSosStatus(false);
     }
   }
 
@@ -39,6 +41,7 @@ class _LockSosToggleState extends State<LockSosToggle> {
     }
 
     return Container(
+      margin: EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         border: Border.all(
           width: 1.5,
@@ -47,12 +50,19 @@ class _LockSosToggleState extends State<LockSosToggle> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.only(left: 8.0, top: 8, bottom: 8),
         child: SwitchListTile(
-          title: const Text('Enable Lock Screen SOS'),
+          title: Text(
+            'Enable Lock Screen SOS',
+            style: AppFontStyles.h6(context),
+          ),
           subtitle: Text(
             _enabled ? 'SOS is active' : 'SOS is disabled',
-            style: TextStyle(color: _enabled ? Colors.green : Colors.red),
+            style: TextStyle(
+              color: _enabled ? Colors.green : Colors.red,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           value: _enabled,
           onChanged: _onChanged,

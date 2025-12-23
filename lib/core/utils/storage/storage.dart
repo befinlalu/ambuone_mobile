@@ -22,4 +22,8 @@ abstract class Storage {
   UserDetails? getUserDetails();
 
   Future<void> setUserDetails(UserDetails? userDetails);
+
+  bool getSosStatus();
+
+  Future<void> setSosStatus(bool value);
 }

@@ -61,12 +61,29 @@ class _SosPageState extends State<SosPage> {
           }
         },
         builder: (context, state) {
-          return Center(
-            child: SOSButton(
-              onCompleted: () {
-                context.read<HomeBloc>().add(GetLocationEvent(context));
-              },
-            ),
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text('Emergency Help', style: AppFontStyles.h3(context)),
+              Text('Needed?', style: AppFontStyles.h3(context)),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SOSButton(
+                    onCompleted: () {
+                      context.read<HomeBloc>().add(GetLocationEvent(context));
+                    },
+                  ),
+                ],
+              ),
+              Text(
+                'Hold 5 seconds to send alert',
+                style: AppFontStyles.bodySmall(context),
+              ),
+            ],
           );
         },
       ),

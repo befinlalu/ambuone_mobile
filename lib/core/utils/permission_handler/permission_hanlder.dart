@@ -32,11 +32,17 @@ Future<bool> showEnableGpsDialog(BuildContext context) async {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: AppFontStyles.bodySmallBold(context),
+              ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Enable'),
+              child: Text(
+                'Enable',
+                style: AppFontStyles.bodySmallBold(context),
+              ),
             ),
           ],
         ),

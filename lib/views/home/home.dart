@@ -146,9 +146,12 @@ class _HomeState extends State<Home> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [SOSButton(onCompleted: sendAlert)],
                     ),
+                    Text(
+                      'Hold 5 seconds to send alert',
+                      style: AppFontStyles.bodySmall(context),
+                    ),
                   ],
                 ),
-                SizedBox(height: 80),
                 LockSosToggle(),
               ],
             ),

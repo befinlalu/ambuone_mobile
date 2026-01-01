@@ -26,7 +26,7 @@ dependencies:
   flutter_native_contact_picker: ^0.0.11
   geocoding: ^4.0.0
   geolocator: ^14.0.1
-
+  android_intent_plus: ^6.0.0
 
 dev_dependencies:
   flutter_test:

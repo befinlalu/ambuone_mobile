@@ -7,6 +7,8 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import android.graphics.BitmapFactory
+import android.os.Handler
+import android.os.Looper
 
 class SosForegroundService : Service() {
 
@@ -19,6 +21,7 @@ class SosForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        handler.post(heartbeat)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -76,6 +79,7 @@ class SosForegroundService : Service() {
     }
 
     override fun onDestroy() {
+        handler.removeCallbacks(heartbeat)
         stopForeground(true)
         super.onDestroy()
     }
@@ -97,6 +101,13 @@ class SosForegroundService : Service() {
                         as NotificationManager
 
             manager.createNotificationChannel(channel)
+        }
+    }
+
+    private val handler = Handler(Looper.getMainLooper())
+        private val heartbeat = object : Runnable {
+            override fun run() {
+                handler.postDelayed(this, 15 * 60 * 1000)
         }
     }
 }

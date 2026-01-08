@@ -365,6 +365,13 @@ class _RegisterState extends State<Register> {
           validator: (v) =>
               (v == null || v.isEmpty) ? 'This field is required' : null,
         ),
+        PrimaryTextFormField(
+          maxLenth: 3,
+          controller: _ageController,
+          keyboardType: TextInputType.number,
+          label: 'Age',
+          validator: (v) => v!.isEmpty ? 'This field is required' : null,
+        ),
       ],
     ),
   );

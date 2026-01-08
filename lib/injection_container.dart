@@ -9,4 +9,6 @@ Future<void> initializeDependencies() async {
   sl.registerSingleton<UserRepo>(UserRepoImpli());
   sl.registerSingleton<AlertRepo>(AlertRepoImpli());
   sl.registerFactory<HomeBloc>(() => HomeBloc(sl(), sl()));
+
+  sl.registerFactory<UserBloc>(() => UserBloc(sl()));
 }

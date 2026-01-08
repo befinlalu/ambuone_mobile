@@ -69,8 +69,8 @@ class PrimaryTextFormField extends StatelessWidget {
         prefixIcon: prefixWidget,
         suffixIcon: suffixWidget,
         prefixIconColor: Theme.of(context).colorScheme.onPrimary,
-        filled: isBorderEnabled,
-        fillColor: Colors.transparent,
+        filled: enabled == false ? true : isBorderEnabled,
+        fillColor: enabled == false ? Colors.grey.shade200 : Colors.transparent,
         border: isBorderEnabled
             ? OutlineInputBorder(
                 borderRadius: BorderRadius.circular(_kBorderRadius),

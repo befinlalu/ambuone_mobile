@@ -135,6 +135,47 @@ class RegisterModel {
     return data;
   }
 
+  /// 🛠️ SAFE UPDATE: Only editable + non-null fields
+  Map<String, String> toUpdateFields() {
+    final Map<String, String> data = {};
+
+    void add(String key, String? value) {
+      if (value != null && value.isNotEmpty) {
+        data[key] = value;
+      }
+    }
+
+    add('first_name', firstName);
+    add('last_name', lastName);
+    if (age != null) data['age'] = age!.toString();
+    add('gender', gender);
+    add('address', address);
+    add('pin_code', pinCode);
+    add('state', state);
+
+    add('health_conditions', healthConditions);
+    add('medicines', medicines);
+
+    add('bank_account_number', bankAccountNumber);
+    add('bank_name', bankName);
+    add('bank_branch', bankBranch);
+    add('ifsc_code', ifscCode);
+
+    add('spouse_name', spouseName);
+    add('spouse_mobile', spouseMobile);
+    add('relative_name', relativeName);
+    add('relative_mobile', relativeMobile);
+
+    add('friend1_name', friend1Name);
+    add('friend1_mobile', friend1Mobile);
+    add('friend2_name', friend2Name);
+    add('friend2_mobile', friend2Mobile);
+    add('friend3_name', friend3Name);
+    add('friend3_mobile', friend3Mobile);
+
+    return data;
+  }
+
   /// 📎 SAFE: Only non-null files are added
   Map<String, File> toFiles() {
     final files = <String, File>{};
@@ -142,6 +183,20 @@ class RegisterModel {
     if (photo != null) {
       files['photo'] = photo!;
     }
+    if (aadharUpload != null) {
+      files['aadhar_upload'] = aadharUpload!;
+    }
+
+    return files;
+  }
+
+  Map<String, File> toUpdateFiles() {
+    final files = <String, File>{};
+
+    if (photo != null) {
+      files['photo'] = photo!;
+    }
+
     if (aadharUpload != null) {
       files['aadhar_upload'] = aadharUpload!;
     }

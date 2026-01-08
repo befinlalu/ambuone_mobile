@@ -11,4 +11,16 @@ class UserRepoImpli extends BaseRepository implements UserRepo {
       );
     });
   }
+
+  @override
+  Future<ApiResponse<UserDetails>> updateUserDetails(RegisterModel form) async {
+    return apiCall<UserDetails>(() {
+      return _handler.handleMultipartPatchRequest(
+        endpoint: '/api/users/profile/',
+        fields: form.toUpdateFields(),
+        files: form.toUpdateFiles(),
+        fromJson: (json) => UserDetails.fromJson(json),
+      );
+    });
+  }
 }

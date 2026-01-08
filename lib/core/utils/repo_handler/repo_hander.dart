@@ -96,6 +96,24 @@ class RepositoryHandler {
     return fromJson(response as Map<String, dynamic>);
   }
 
+  Future<T?> handleMultipartPatchRequest<T>({
+    required String endpoint,
+    required Map<String, String> fields,
+    Map<String, File>? files,
+    required T Function(Map<String, dynamic>) fromJson,
+  }) async {
+    final response = await HttpServices().patchMultipart(
+      endpoint,
+      fields: fields,
+      files: files,
+    );
+
+    // In case API returns null (204 etc.)
+    if (response == null) return null;
+
+    return fromJson(response as Map<String, dynamic>);
+  }
+
   Future<List<T>> handleMultipartPostListRequest<T>({
     required String endpoint,
     required Map<String, String> fields,

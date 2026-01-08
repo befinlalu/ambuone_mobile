@@ -39,6 +39,14 @@ final GoRouter appRouter = GoRouter(
     ),
 
     GoRoute(
+      path: PageRoutes.editProfile,
+      builder: (context, state) {
+        final user = state.extra as UserDetails;
+        return EditProfile(user: user);
+      },
+    ),
+
+    GoRoute(
       path: PageRoutes.profile,
       builder: (context, state) {
         final user = state.extra as UserDetails;

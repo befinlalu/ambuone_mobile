@@ -194,7 +194,21 @@ class _EditProfileState extends State<EditProfile> {
     return Scaffold(
       appBar: CommonAppbar(title: 'Edit Profile', isLeading: true),
       body: BlocConsumer<UserBloc, UserState>(
-        listener: (context, state) {},
+        listener: (context, state) {
+          if (state is UpdateProfileLoadingState) {
+            DialogManager.instance.showLoadingDialog(
+              context,
+              message: "Updating....",
+            );
+          }
+          if (state is UpdateProfileSuccessState) {
+            DialogManager.instance.hideLoadingDialog(context);
+            Navigator.pop(context, true);
+          }
+          if (state is UpdateProfileErrorState) {
+            DialogManager.instance.hideLoadingDialog(context);
+          }
+        },
         builder: (context, state) {
           return PageView(
             controller: _pageController,

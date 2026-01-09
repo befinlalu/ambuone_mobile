@@ -46,7 +46,6 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                   ),
                 ).then((value) {
                   if (value == true) {
-                    print("this is working properly");
                     setState(() {
                       userDetails = SharedStorages().getUserDetails();
                     });

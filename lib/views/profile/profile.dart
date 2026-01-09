@@ -37,12 +37,9 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BlocProvider.value(
-                      value:
-                          sl<
-                            UserBloc
-                          >(), // Inject your Service Locator instance here
+                      value: sl<UserBloc>(),
                       child: EditProfile(user: widget.user),
-                    ), // Pass widget.user here
+                    ),
                   ),
                 ).then((value) {
                   if (value == true) {

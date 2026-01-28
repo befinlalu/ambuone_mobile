@@ -6,6 +6,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     on<UserEvent>((event, emit) {});
     on<GetUserDetailsEvent>(getUserDetails);
     on<UpdateProfileEvent>(updateProfile);
+    on<DeleteProfileEvent>(deleteProfile);
   }
 
   FutureOr<void> getUserDetails(
@@ -43,6 +44,25 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       }
     } catch (e) {
       emit(UpdateProfileErrorState(message: e.toString()));
+    }
+  }
+
+  FutureOr<void> deleteProfile(
+    DeleteProfileEvent event,
+    Emitter<UserState> emit,
+  ) async {
+    emit(DeleteProfileLoadingState());
+    try {
+      final res = await userRepo.deleteUserDetails();
+
+      if (res.success) {
+        SharedStorages().clear();
+        emit(DeleteProfileSuccessState());
+      } else {
+        emit(DeleteProfileErrorState(message: res.message));
+      }
+    } catch (e) {
+      emit(DeleteProfileErrorState(message: e.toString()));
     }
   }
 }

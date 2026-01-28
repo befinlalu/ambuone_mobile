@@ -30,3 +30,12 @@ class UpdateProfileErrorState extends UserState {
   final String message;
   UpdateProfileErrorState({required this.message});
 }
+
+class DeleteProfileLoadingState extends UserState {}
+
+class DeleteProfileSuccessState extends UserState {}
+
+class DeleteProfileErrorState extends UserState {
+  final String message;
+  DeleteProfileErrorState({required this.message});
+}

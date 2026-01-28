@@ -74,7 +74,8 @@ class _ProfileHeader extends StatelessWidget {
                   if (await DialogManager.instance.showAppDialog(
                     context,
                     title: 'Confirmation',
-                    subTitle: 'Are you sure you want to delete your account?',
+                    subTitle:
+                        'Are you sure you want to proceed with deleting your account? This action is permanent and will also cancel your subscription.',
                   )) {
                     onDelete();
                   }

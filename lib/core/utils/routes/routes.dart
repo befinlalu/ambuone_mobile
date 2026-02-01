@@ -50,7 +50,10 @@ final GoRouter appRouter = GoRouter(
       path: PageRoutes.profile,
       builder: (context, state) {
         final user = state.extra as UserDetails;
-        return UserDetailsPage(user: user);
+        return BlocProvider(
+          create: (context) => sl<UserBloc>(),
+          child: UserDetailsPage(user: user),
+        );
       },
     ),
   ],

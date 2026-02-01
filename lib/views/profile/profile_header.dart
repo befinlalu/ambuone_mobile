@@ -4,10 +4,12 @@ class _ProfileHeader extends StatelessWidget {
   final UserDetails? user;
   final UserProfile? profile;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
   const _ProfileHeader({
     required this.user,
     required this.profile,
     required this.onEdit,
+    required this.onDelete,
   });
 
   @override
@@ -68,6 +70,16 @@ class _ProfileHeader extends StatelessWidget {
                   await LockSosService.stopSos();
                   context.go(PageRoutes.welcome);
                   break;
+                case 'delete':
+                  if (await DialogManager.instance.showAppDialog(
+                    context,
+                    title: 'Confirmation',
+                    subTitle:
+                        'Are you sure you want to proceed with deleting your account? This action is permanent and will also cancel your subscription.',
+                  )) {
+                    onDelete();
+                  }
+                  break;
               }
             },
             itemBuilder: (BuildContext context) => [
@@ -95,6 +107,18 @@ class _ProfileHeader extends StatelessWidget {
                 child: ListTile(
                   leading: Icon(Icons.logout, color: Colors.red, size: 20),
                   title: Text('Logout', style: TextStyle(color: Colors.red)),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'delete',
+                child: ListTile(
+                  leading: Icon(Icons.logout, color: Colors.red, size: 20),
+                  title: Text(
+                    'Delete Account',
+                    style: TextStyle(color: Colors.red),
+                  ),
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                 ),

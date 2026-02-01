@@ -25,94 +25,123 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('User Details'), centerTitle: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _ProfileHeader(
-              user: userDetails,
-              profile: profile,
-              onEdit: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => BlocProvider.value(
-                      value: sl<UserBloc>(),
-                      child: EditProfile(user: widget.user),
-                    ),
-                  ),
-                ).then((value) {
-                  if (value == true) {
-                    setState(() {
-                      userDetails = SharedStorages().getUserDetails();
-                    });
-                  }
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // --- NEW: NON-EDITABLE PROFILE SECTION ---
-            _SectionCard(
-              title: 'Profile Information',
+      body: BlocConsumer<UserBloc, UserState>(
+        listener: (context, state) async {
+          if (state is DeleteProfileLoadingState) {
+            DialogManager.instance.showLoadingDialog(
+              context,
+              message: 'Please wait...',
+            );
+          }
+          if (state is DeleteProfileSuccessState) {
+            DialogManager.instance.hideLoadingDialog(context);
+            ToastService.showSuccess(context, 'Deleted successfully');
+            await SharedStorages().clear();
+            await LockSosService.stopSos();
+            context.go(PageRoutes.welcome);
+          }
+          if (state is DeleteProfileErrorState) {
+            DialogManager.instance.hideLoadingDialog(context);
+            ToastService.showError(state.message);
+            await SharedStorages().clear();
+            await LockSosService.stopSos();
+            context.go(PageRoutes.welcome);
+          }
+        },
+        builder: (context, state) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
               children: [
-                _InfoRow('First Name', userDetails?.firstName),
-                _InfoRow('Last Name', userDetails?.lastName),
-                _InfoRow('Email', userDetails?.email),
-                _InfoRow('Phone Number', userDetails?.phoneNumber),
-                _InfoRow('Gender', profile?.gender),
-                _InfoRow('Age', profile?.age?.toString()),
-              ],
-            ),
-
-            _SectionCard(
-              title: 'Residential Details',
-              children: [
-                _InfoRow('Address', profile?.address),
-                _InfoRow('State', profile?.state),
-                _InfoRow('Pincode', profile?.pinCode),
-              ],
-            ),
-
-            _SectionCard(
-              title: 'Emergency Contacts',
-              children: [
-                _InfoRow('Spouse', profile?.spouseName),
-                _InfoRow('Spouse Mobile', profile?.spouseMobile),
-                _InfoRow('Relative', profile?.relativeName),
-                _InfoRow('Relative Mobile', profile?.relativeMobile),
-                _InfoRow('Friend 1', profile?.friend1Name),
-                _InfoRow('Friend 2', profile?.friend2Name),
-                _InfoRow('Friend 3', profile?.friend3Name),
-              ],
-            ),
-
-            _SectionCard(
-              title: 'Medical Details',
-              children: [
-                _InfoRow('Health Conditions', profile?.healthConditions),
-                _InfoRow('Medicines', profile?.medicines),
-              ],
-            ),
-
-            if (qr != null && qr.qrCode != null)
-              _SectionCard(
-                title: 'Membership QR',
-                children: [
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(12),
+                _ProfileHeader(
+                  user: userDetails,
+                  profile: profile,
+                  onEdit: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BlocProvider.value(
+                          value: sl<UserBloc>(),
+                          child: EditProfile(user: widget.user),
+                        ),
                       ),
-                      child: Image.network(qr.qrCode!, height: 200),
-                    ),
+                    ).then((value) {
+                      if (value == true) {
+                        setState(() {
+                          userDetails = SharedStorages().getUserDetails();
+                        });
+                      }
+                    });
+                  },
+                  onDelete: () {
+                    context.read<UserBloc>().add(DeleteProfileEvent());
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // --- NEW: NON-EDITABLE PROFILE SECTION ---
+                _SectionCard(
+                  title: 'Profile Information',
+                  children: [
+                    _InfoRow('First Name', userDetails?.firstName),
+                    _InfoRow('Last Name', userDetails?.lastName),
+                    _InfoRow('Email', userDetails?.email),
+                    _InfoRow('Phone Number', userDetails?.phoneNumber),
+                    _InfoRow('Gender', profile?.gender),
+                    _InfoRow('Age', profile?.age?.toString()),
+                  ],
+                ),
+
+                _SectionCard(
+                  title: 'Residential Details',
+                  children: [
+                    _InfoRow('Address', profile?.address),
+                    _InfoRow('State', profile?.state),
+                    _InfoRow('Pincode', profile?.pinCode),
+                  ],
+                ),
+
+                _SectionCard(
+                  title: 'Emergency Contacts',
+                  children: [
+                    _InfoRow('Spouse', profile?.spouseName),
+                    _InfoRow('Spouse Mobile', profile?.spouseMobile),
+                    _InfoRow('Relative', profile?.relativeName),
+                    _InfoRow('Relative Mobile', profile?.relativeMobile),
+                    _InfoRow('Friend 1', profile?.friend1Name),
+                    _InfoRow('Friend 2', profile?.friend2Name),
+                    _InfoRow('Friend 3', profile?.friend3Name),
+                  ],
+                ),
+
+                _SectionCard(
+                  title: 'Medical Details',
+                  children: [
+                    _InfoRow('Health Conditions', profile?.healthConditions),
+                    _InfoRow('Medicines', profile?.medicines),
+                  ],
+                ),
+
+                if (qr != null && qr.qrCode != null)
+                  _SectionCard(
+                    title: 'Membership QR',
+                    children: [
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Image.network(qr.qrCode!, height: 200),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-          ],
-        ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

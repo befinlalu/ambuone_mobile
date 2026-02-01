@@ -23,4 +23,14 @@ class UserRepoImpli extends BaseRepository implements UserRepo {
       );
     });
   }
+
+  @override
+  Future<ApiResponse<void>> deleteUserDetails() {
+    return apiCall<void>(() {
+      return _handler.handleDeleteRequest(
+        endpoint: '/api/users/delete-account/',
+        fromJson: (json) => json,
+      );
+    });
+  }
 }

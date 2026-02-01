@@ -12,3 +12,5 @@ class UpdateProfileEvent extends UserEvent {
   final RegisterModel form;
   UpdateProfileEvent({required this.form});
 }
+
+class DeleteProfileEvent extends UserEvent {}

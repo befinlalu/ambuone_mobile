@@ -27,6 +27,10 @@ class MainActivity : FlutterActivity() {
                 }
 
                 "stopSosService" -> {
+                    // 1. Tell the system we are stopping intentionally
+                    SosForegroundService.setServiceEnabled(this, false)
+
+                    // 2. Actually stop the service
                     val intent = Intent(this, SosForegroundService::class.java)
                     stopService(intent)
                     result.success(true)

@@ -6,14 +6,18 @@ import android.content.Intent
 import android.util.Log
 
 class SosNotificationDismissedReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        Log.d("SosDismissReceiver", "Notification dismissed by user")
 
-    override fun onReceive(context: Context, intent: Intent?) {
-        Log.d("SOS_FLOW", "SOS notification dismissed")
-
-        if (SosForegroundService.shouldRestart) {
-            val restartIntent =
-                Intent(context, SosForegroundService::class.java)
-            context.startService(restartIntent)
+        // Check the new "Service Enabled" flag instead of the old 'shouldRestart' variable
+        if (SosForegroundService.isServiceEnabled(context)) {
+            Log.d("SosDismissReceiver", "SOS is supposed to be ON. Triggering restart.")
+            
+            // Trigger the Watchdog to restart the service
+            val restartIntent = Intent(context, SosRestartReceiver::class.java)
+            context.sendBroadcast(restartIntent)
+        } else {
+             Log.d("SosDismissReceiver", "SOS is OFF. Doing nothing.")
         }
     }
 }

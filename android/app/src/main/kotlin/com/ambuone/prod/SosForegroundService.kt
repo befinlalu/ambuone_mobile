@@ -9,13 +9,27 @@ import androidx.core.app.NotificationCompat
 import android.graphics.BitmapFactory
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 
 class SosForegroundService : Service() {
 
     companion object {
         const val CHANNEL_ID = "sos_foreground_channel"
         const val NOTIFICATION_ID = 999
-        var shouldRestart: Boolean = true
+        private const val PREF_NAME = "SosPrefs"
+        private const val KEY_IS_ENABLED = "is_sos_enabled"
+
+        // Helper to set state
+        fun setServiceEnabled(context: Context, enabled: Boolean) {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putBoolean(KEY_IS_ENABLED, enabled).apply()
+        }
+
+        // Helper to check state
+        fun isServiceEnabled(context: Context): Boolean {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            return prefs.getBoolean(KEY_IS_ENABLED, false)
+        }
     }
 
     override fun onCreate() {
@@ -25,6 +39,8 @@ class SosForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        setServiceEnabled(this, true)
 
         val lockIntent = Intent(this, LockScreenActivity::class.java)
         lockIntent.flags =
@@ -69,18 +85,25 @@ class SosForegroundService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        if (shouldRestart) {
-            val restartIntent =
-                Intent(applicationContext, SosForegroundService::class.java)
-            restartIntent.setPackage(packageName)
-            startService(restartIntent)
+        Log.d("SosService", "Task Removed - Restarting")
+        
+        if (isServiceEnabled(this)) {
+            val restartIntent = Intent(applicationContext, SosRestartReceiver::class.java)
+            sendBroadcast(restartIntent)
         }
+        
         super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {
         handler.removeCallbacks(heartbeat)
         stopForeground(true)
+        
+        // Only restart if the USER wants it enabled
+        if (isServiceEnabled(this)) {
+            val restartIntent = Intent(this, SosRestartReceiver::class.java)
+            sendBroadcast(restartIntent)
+        }
         super.onDestroy()
     }
 

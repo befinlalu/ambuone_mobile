@@ -24,13 +24,15 @@ class _LockSosToggleState extends State<LockSosToggle> {
 
   Future<void> _onChanged(bool value) async {
     setState(() => _enabled = value);
-
     if (value) {
       await LockSosService.startSos();
-      SharedStorages().setSosStatus(true);
+      await SharedStorages().setSosStatus(true);
+      if (mounted) {
+        await AutoStartHelper.checkAndOpenAutoStart(context);
+      }
     } else {
       await LockSosService.stopSos();
-      SharedStorages().setSosStatus(false);
+      await SharedStorages().setSosStatus(false);
     }
   }
 

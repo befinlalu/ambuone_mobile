@@ -14,6 +14,10 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    _requestStandardPermissions();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AutoStartHelper.checkAndOpenAutoStart(context);
+    });
     user = SharedStorages().getUser();
     if (user != null) {
       userDetails = SharedStorages().getUserDetails();
@@ -32,6 +36,10 @@ class _HomeState extends State<Home> {
     } else {
       context.go(PageRoutes.welcome);
     }
+  }
+
+  Future<void> _requestStandardPermissions() async {
+    await [Permission.location, Permission.notification].request();
   }
 
   @override

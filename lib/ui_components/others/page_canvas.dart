@@ -6,6 +6,8 @@ class PageCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(padding: EdgeInsetsGeometry.all(16), child: child);
+    return SafeArea(
+      child: Padding(padding: EdgeInsetsGeometry.all(16), child: child),
+    );
   }
 }

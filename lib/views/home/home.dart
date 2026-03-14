@@ -175,7 +175,10 @@ class _HomeState extends State<Home> {
           }
           if (state is SendAlertSuccessState) {
             DialogManager.instance.hideLoadingDialog(context);
-            ToastService.showSuccess(context, 'Alert Sent Successfully');
+            ToastService.showSuccess(
+              context,
+              'Ambuone SOS signal transmitted with your coordinates, help is on the way.',
+            );
           }
           if (state is SendAlertErrorState) {
             DialogManager.instance.hideLoadingDialog(context);

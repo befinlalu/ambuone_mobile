@@ -441,9 +441,9 @@ class _LockSosToggleState extends State<LockSosToggle> {
           // ── Toggle 1: Volume button ────────────────────────────────────
           _FeatureTile(
             icon: Icons.volume_down_rounded,
-            title: 'Volume button (3× press)',
+            title: 'Volume down button (3× press)',
             subtitle: _volumeEnabled
-                ? 'Active — works even when screen is off'
+                ? 'Active — works even in the lock screen'
                 : 'Triple press volume down to trigger SOS',
             tags: [
               _Tag('Recommended', Colors.blue.shade700),

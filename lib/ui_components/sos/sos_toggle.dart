@@ -470,7 +470,7 @@ class _LockSosToggleState extends State<LockSosToggle> {
             subtitle: _notificationEnabled
                 ? 'Pinned — tap to open SOS without unlocking'
                 : 'Permanent notification on your lock screen',
-            tags: [_Tag('Recommended', Colors.blue.shade700)],
+            // tags: [_Tag('Recommended', Colors.blue.shade700)],
             isToggle: true,
             toggleValue: _notificationEnabled,
             onToggle: _onNotificationChanged,

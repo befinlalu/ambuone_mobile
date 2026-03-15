@@ -56,6 +56,14 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+    GoRoute(
+      path: PageRoutes.maintain,
+      builder: (context, state) => MaintenancePage(),
+    ),
+    GoRoute(
+      path: PageRoutes.update,
+      builder: (context, state) => MandatoryUpdatePage(),
+    ),
   ],
   redirect: (context, state) async {
     final token = SharedStorages().getAccessToken();

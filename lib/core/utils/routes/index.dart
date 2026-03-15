@@ -11,6 +11,7 @@ import 'package:ambuone_moblie/views/profile/index.dart';
 import 'package:ambuone_moblie/views/register/index.dart';
 import 'package:ambuone_moblie/views/sos/index.dart';
 import 'package:ambuone_moblie/views/splash/index.dart';
+import 'package:ambuone_moblie/views/version/index.dart';
 import 'package:ambuone_moblie/views/welcome/index.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';

@@ -8,19 +8,60 @@ class Splash extends StatefulWidget {
 }
 
 class _SplashState extends State<Splash> {
+  final _repo = VersionRepoImpli();
+
   @override
   void initState() {
     super.initState();
-    _navigateNext();
+    _init();
   }
 
-  Future<void> _navigateNext() async {
-    await Future.delayed(const Duration(seconds: 1));
+  Future<void> _init() async {
+    // Run logo display and config check in parallel
+    await Future.wait([
+      Future.delayed(const Duration(seconds: 2)),
+      _checkConfig(),
+    ]);
+  }
 
+  Future<void> _checkConfig() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      final installedVersion = info.version;
+
+      final response = await _repo.getVersion();
+      final version = response.data;
+
+      if (!mounted) return;
+
+      if (version == null) {
+        // Config call returned no data — proceed normally
+        _navigateNext();
+        return;
+      }
+
+      if (version.appMaintenance) {
+        context.go(PageRoutes.maintain);
+        return;
+      }
+
+      if (version.requiresUpdate(installedVersion)) {
+        context.go(
+          PageRoutes.update
+        );
+        return;
+      }
+
+      _navigateNext();
+    } catch (_) {
+      // Never block on a config failure — proceed normally
+      if (mounted) _navigateNext();
+    }
+  }
+
+  void _navigateNext() {
     if (!mounted) return;
-
     final session = SharedStorages().getAccessToken();
-
     if (session == null || session.isEmpty) {
       context.go(PageRoutes.welcome);
     } else {

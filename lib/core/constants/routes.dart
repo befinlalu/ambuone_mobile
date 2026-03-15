@@ -8,4 +8,6 @@ class PageRoutes {
   static const home = "/home";
   static const profile = "/profile";
   static const editProfile = "edit-profile";
+  static const maintain = "maintain";
+  static const update = "update";
 }

@@ -3,4 +3,6 @@
     <string name="app_name">AmbuOne</string>
 
     <string name="accessibility_description">AmbuOne uses this Accessibility Service solely to detect when you press the Volume Down button 3 times in quick succession. This triggers an emergency SOS alert even when your screen is locked, allowing you to call for help hands-free in a crisis. No keystrokes, personal data, or screen content is ever recorded or shared.</string>
+    <string name="accessibility_service_description">AmbuOne uses this Accessibility Service solely to detect when you press the Volume Down button 3 times in quick succession. This triggers an emergency SOS alert even when your screen is locked, allowing you to call for help hands-free in a crisis. No keystrokes, personal data, or screen content is ever recorded or shared.</string>
 </resources>
+

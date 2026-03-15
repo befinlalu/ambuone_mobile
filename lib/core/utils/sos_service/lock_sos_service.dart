@@ -52,4 +52,14 @@ class LockSosService {
       debugPrint("Error requesting battery optimization: $e");
     }
   }
+
+  static Future<void> setVolumeButtonEnabled(bool enabled) async {
+    try {
+      await _channel.invokeMethod('setVolumeButtonEnabled', {
+        'enabled': enabled,
+      });
+    } catch (e) {
+      debugPrint("Error setting volume button: $e");
+    }
+  }
 }

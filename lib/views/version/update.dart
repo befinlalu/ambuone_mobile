@@ -126,29 +126,21 @@ class MandatoryUpdatePage extends StatelessWidget {
                 const Spacer(),
 
                 // ── Update button ─────────────────────────────────────────
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () async {
-                      final url = Uri.parse(
-                        'https://play.google.com/store/apps/details?id=com.ambuone.prod',
+                MainButton(
+                  buttonColor: Theme.of(context).colorScheme.tertiary,
+                  buttonTitle: 'Update Now',
+                  textStyle: TextStyle(color: Colors.white),
+                  onPressed: () async {
+                    final url = Uri.parse(
+                      'https://play.google.com/store/apps/details?id=com.ambuone.prod',
+                    );
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(
+                        url,
+                        mode: LaunchMode.externalApplication,
                       );
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(
-                          url,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                    label: const Text('Update on Play Store'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 12),

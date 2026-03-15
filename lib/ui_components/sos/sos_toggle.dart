@@ -33,6 +33,9 @@ class _LockSosToggleState extends State<LockSosToggle> {
     final notif = SharedStorages().getSosStatus();
     final volume = await LockSosService.isAccessibilityEnabled();
     if (!mounted) return;
+    // Sync pref on load — covers case where user toggled accessibility
+    // outside the app since last launch
+    await LockSosService.setVolumeButtonEnabled(volume);
     setState(() {
       _notificationEnabled = notif;
       _volumeEnabled = volume;
@@ -40,9 +43,13 @@ class _LockSosToggleState extends State<LockSosToggle> {
     });
   }
 
+  // Called when user returns from any system settings screen
   Future<void> _refreshAccessibilityState() async {
     final volume = await LockSosService.isAccessibilityEnabled();
     if (!mounted) return;
+    // Sync the pref to match real accessibility state
+    await LockSosService.setVolumeButtonEnabled(volume);
+    await SharedStorages().setVolumeButtonSosEnabled(volume);
     setState(() => _volumeEnabled = volume);
   }
 
@@ -54,13 +61,13 @@ class _LockSosToggleState extends State<LockSosToggle> {
       await LockSosService.startSos();
       await SharedStorages().setSosStatus(true);
       if (mounted) await _showNotificationSetupDialog();
+      // if (mounted) await AutoStartHelper.checkAndOpenAutoStart(context);
     } else {
       await LockSosService.stopSos();
       await SharedStorages().setSosStatus(false);
     }
   }
 
-  // Full instruction dialog for notification setup
   Future<void> _showNotificationSetupDialog() async {
     final proceed = await showDialog<bool>(
       context: context,
@@ -83,9 +90,9 @@ class _LockSosToggleState extends State<LockSosToggle> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              const Text(
                 'Your SOS notification is now active. To keep it reliable:',
-                style: AppFontStyles.h6(context),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
               ),
               const SizedBox(height: 12),
               _DialogStep(
@@ -106,7 +113,7 @@ class _LockSosToggleState extends State<LockSosToggle> {
                 body:
                     'If you swipe away the SOS notification, it will '
                     'restart automatically. However on some phones '
-                    '(Xiaomi, OPPO, Samsung , Vivo) the OS may block this — '
+                    '(Xiaomi, OPPO, Samsung, Vivo) the OS may block this — '
                     'battery optimization exemption prevents that.',
               ),
               const SizedBox(height: 10),
@@ -140,9 +147,13 @@ class _LockSosToggleState extends State<LockSosToggle> {
           ),
         ),
         actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Skip'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Close'),
+            child: const Text('Disable battery optimization'),
           ),
         ],
       ),
@@ -156,11 +167,32 @@ class _LockSosToggleState extends State<LockSosToggle> {
 
   Future<void> _onVolumeChanged(bool value) async {
     if (value && !_volumeEnabled) {
+      // Turning ON — show disclosure then open settings
       final proceed = await _showVolumeSetupDialog();
-      if (proceed == true) {
-        await LockSosService.openAccessibilitySettings();
-      }
+      if (proceed != true) return;
+
+      await LockSosService.openAccessibilitySettings();
+
+      // After returning from settings, check if user actually enabled it
+      final nowEnabled = await LockSosService.isAccessibilityEnabled();
+      if (!nowEnabled) return; // user didn't enable — do nothing
+
+      // ── CRITICAL: write the pref ──────────────────────────────────────
+      // This is what SosAccessibilityService.onKeyEvent() reads.
+      // Without this the service ignores all volume presses.
+      await LockSosService.setVolumeButtonEnabled(true);
+      await SharedStorages().setVolumeButtonSosEnabled(true);
+      if (mounted) setState(() => _volumeEnabled = true);
+
+      // OEM autostart prompt — keeps the process alive on Xiaomi/OPPO/Vivo
+      // if (mounted) await AutoStartHelper.checkAndOpenAutoStart(context);
     } else if (!value && _volumeEnabled) {
+      // Turning OFF — clear the pref immediately so service stops reacting
+      await LockSosService.setVolumeButtonEnabled(false);
+      await SharedStorages().setVolumeButtonSosEnabled(false);
+      setState(() => _volumeEnabled = false);
+
+      // Also guide user to disable in accessibility settings
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -169,13 +201,17 @@ class _LockSosToggleState extends State<LockSosToggle> {
           ),
           title: const Text('Disable volume trigger'),
           content: const Text(
-            'To turn this off:\n\n'
+            'To fully turn this off:\n\n'
             '1. Open Accessibility Settings\n'
             '2. Tap "Downloaded apps" or "Installed apps"\n'
             '3. Tap "AmbuOne SOS trigger"\n'
             '4. Toggle it OFF',
           ),
           actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Later'),
+            ),
             FilledButton(
               onPressed: () async {
                 Navigator.pop(ctx);
@@ -189,7 +225,6 @@ class _LockSosToggleState extends State<LockSosToggle> {
     }
   }
 
-  // Step-by-step accessibility setup dialog
   Future<bool?> _showVolumeSetupDialog() {
     return showDialog<bool>(
       context: context,
@@ -198,7 +233,13 @@ class _LockSosToggleState extends State<LockSosToggle> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Text('Set up volume trigger', style: AppFontStyles.h6(context)),
+            Icon(
+              Icons.volume_down_rounded,
+              color: Colors.blue.shade700,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            const Text('Set up volume trigger'),
           ],
         ),
         content: SingleChildScrollView(
@@ -257,7 +298,7 @@ class _LockSosToggleState extends State<LockSosToggle> {
               _DialogStep(
                 number: '3',
                 color: Colors.blue.shade700,
-                title: 'Tap "AmbuOne"',
+                title: 'Tap "AmbuOne SOS trigger"',
                 body: 'You\'ll see it listed under AmbuOne.',
               ),
               const SizedBox(height: 8),
@@ -266,8 +307,8 @@ class _LockSosToggleState extends State<LockSosToggle> {
                 color: Colors.green.shade700,
                 title: 'Toggle it ON and tap Allow',
                 body:
-                    'Android will show a confirmation prompt — tap '
-                    '"Allow" to enable it.',
+                    'Android will show a confirmation prompt — '
+                    'tap "Allow" to enable it.',
               ),
               const SizedBox(height: 10),
               Container(
@@ -342,7 +383,6 @@ class _LockSosToggleState extends State<LockSosToggle> {
     if (proceed == true) {
       await LockSosService.pinWidget();
       if (!mounted) return;
-      // Success snackbar after returning from launcher prompt
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
@@ -350,8 +390,8 @@ class _LockSosToggleState extends State<LockSosToggle> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          content: Row(
-            children: const [
+          content: const Row(
+            children: [
               Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
               SizedBox(width: 8),
               Expanded(
@@ -427,9 +467,9 @@ class _LockSosToggleState extends State<LockSosToggle> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _StatusDot(active: _notificationEnabled),
-                    const SizedBox(width: 5),
                     _StatusDot(active: _volumeEnabled),
+                    const SizedBox(width: 5),
+                    _StatusDot(active: _notificationEnabled),
                   ],
                 ),
               ],
@@ -470,7 +510,7 @@ class _LockSosToggleState extends State<LockSosToggle> {
             subtitle: _notificationEnabled
                 ? 'Pinned — tap to open SOS without unlocking'
                 : 'Permanent notification on your lock screen',
-            // tags: [_Tag('Recommended', Colors.blue.shade700)],
+            tags: const [],
             isToggle: true,
             toggleValue: _notificationEnabled,
             onToggle: _onNotificationChanged,
@@ -509,7 +549,7 @@ class _Tag {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Dialog step widget — reused in both notification and volume dialogs
+// Dialog step
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _DialogStep extends StatelessWidget {
@@ -617,7 +657,6 @@ class _FeatureTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icon badge
             Container(
               width: 36,
               height: 36,
@@ -635,10 +674,7 @@ class _FeatureTile extends StatelessWidget {
                     : scheme.onSurface.withOpacity(0.35),
               ),
             ),
-
             const SizedBox(width: 12),
-
-            // Text + tags
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -695,8 +731,6 @@ class _FeatureTile extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Right: switch or add icon
             if (isToggle)
               Transform.scale(
                 scale: 0.85,

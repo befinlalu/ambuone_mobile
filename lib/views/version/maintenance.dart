@@ -264,31 +264,6 @@ class _MaintenancePageState extends State<MaintenancePage>
 
                 const SizedBox(height: 12),
 
-                // ── Manual retry ──────────────────────────────────────────
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _retrying ? null : () => _retry(),
-                    icon: _retrying
-                        ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: scheme.secondary,
-                            ),
-                          )
-                        : const Icon(Icons.refresh_rounded, size: 18),
-                    label: Text(_retrying ? 'Checking...' : 'Check now'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-
                 const SizedBox(height: 12),
 
                 Text(

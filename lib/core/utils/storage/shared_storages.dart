@@ -6,6 +6,8 @@ class _StorageKeys {
   static const String user = 'user';
   static const String userDetails = 'user-details';
   static const String sosStatus = 'sos-status';
+  static const String volumeButtonSosEnabled = 'volume-button-sos-enabled';
+  static const String widgetSosEnabled = 'widget-sos-enabled';
 }
 
 class SharedStorages implements Storage {
@@ -107,5 +109,25 @@ class SharedStorages implements Storage {
   @override
   Future<void> setSosStatus(bool value) async {
     await _preferences.setBool(_StorageKeys.sosStatus, value);
+  }
+
+  @override
+  bool getVolumeButtonSosEnabled() {
+    return _preferences.getBool(_StorageKeys.volumeButtonSosEnabled) ?? false;
+  }
+
+  @override
+  Future<void> setVolumeButtonSosEnabled(bool value) async {
+    await _preferences.setBool(_StorageKeys.volumeButtonSosEnabled, value);
+  }
+
+  @override
+  bool getWidgetSosEnabled() {
+    return _preferences.getBool(_StorageKeys.widgetSosEnabled) ?? false;
+  }
+
+  @override
+  Future<void> setWidgetSosEnabled(bool value) async {
+    await _preferences.setBool(_StorageKeys.widgetSosEnabled, value);
   }
 }

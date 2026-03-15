@@ -77,6 +77,8 @@ final GoRouter appRouter = GoRouter(
       PageRoutes.welcome,
       PageRoutes.login,
       PageRoutes.register,
+      PageRoutes.maintain,
+      PageRoutes.update,
     ];
     final isGoingToPublicPage = publicPages.contains(path);
 

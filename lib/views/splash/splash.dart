@@ -17,7 +17,6 @@ class _SplashState extends State<Splash> {
   }
 
   Future<void> _init() async {
-    // Run logo display and config check in parallel
     await Future.wait([
       Future.delayed(const Duration(seconds: 2)),
       _checkConfig(),
@@ -46,15 +45,12 @@ class _SplashState extends State<Splash> {
       }
 
       if (version.requiresUpdate(installedVersion)) {
-        context.go(
-          PageRoutes.update
-        );
+        context.go(PageRoutes.update);
         return;
       }
 
       _navigateNext();
     } catch (_) {
-      // Never block on a config failure — proceed normally
       if (mounted) _navigateNext();
     }
   }

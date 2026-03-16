@@ -21,13 +21,20 @@ class SosAccessibilityService : AccessibilityService() {
     private val keepAliveHandler = Handler(Looper.getMainLooper())
     private val keepAlive = object : Runnable {
         override fun run() {
-            val prefs = getSharedPreferences(
-                SosForegroundService.PREF_NAME, MODE_PRIVATE
-            )
-            val enabled = prefs.getBoolean(
-                SosForegroundService.KEY_VOLUME_ENABLED, false
-            )
-            Log.d("SosAccessibility", "Keep-alive — volume enabled: $enabled")
+            try {
+                // Safely renew the 10-minute lock every 5 minutes to prevent Play Store battery flags
+                serviceWakeLock?.acquire(10 * 60 * 1000L)
+                
+                val prefs = getSharedPreferences(
+                    SosForegroundService.PREF_NAME, MODE_PRIVATE
+                )
+                val enabled = prefs.getBoolean(
+                    SosForegroundService.KEY_VOLUME_ENABLED, false
+                )
+                Log.d("SosAccessibility", "Keep-alive — volume enabled: $enabled")
+            } catch (e: Exception) {
+                Log.e("SosAccessibility", "Keep-alive error: ${e.message}")
+            }
             keepAliveHandler.postDelayed(this, 5 * 60 * 1000L)
         }
     }
@@ -35,10 +42,12 @@ class SosAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         
-        // 1. Initialize WakeLock to prevent OEM freezing
+        // Initialize WakeLock with a 10-minute timeout
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        serviceWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AmbuOne::ServiceWakeLock")
-        serviceWakeLock?.acquire() // Keep CPU ready
+        serviceWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AmbuOne::ServiceWakeLock").apply {
+            setReferenceCounted(false)
+            acquire(10 * 60 * 1000L) 
+        }
 
         val info = AccessibilityServiceInfo().apply {
             eventTypes = AccessibilityEvent.TYPES_ALL_MASK
@@ -77,47 +86,52 @@ class SosAccessibilityService : AccessibilityService() {
                 Log.d("SosAccessibility", "Triple press — launching SOS")
                 clickCount = 0
                 
-                // Trigger Vibration so user knows it worked immediately
                 triggerVibration()
                 launchSosPage()
             }
 
-            // Return true to "consume" the event or false to let volume still change
-            return true 
+            // CRITICAL FIX: Return false so the user can still adjust their volume normally
+            return false 
         }
 
         return false
     }
 
     private fun triggerVibration() {
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            vibratorManager.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                vibratorManager.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator.vibrate(500)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(500)
+            }
+        } catch (e: Exception) {
+            Log.e("SosAccessibility", "Vibration error: ${e.message}")
         }
     }
 
     private fun launchSosPage() {
         val pm = getSystemService(PowerManager::class.java)
         
-        // Force screen wake up
-        @Suppress("DEPRECATION")
-        val wl = pm.newWakeLock(
-            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
-            PowerManager.ACQUIRE_CAUSES_WAKEUP or
-            PowerManager.ON_AFTER_RELEASE,
-            "ambuone:sos_wake"
-        )
-        wl.acquire(3000L)
+        // Force screen wake up only if it's currently off
+        if (!pm.isInteractive) {
+            @Suppress("DEPRECATION")
+            val wl = pm.newWakeLock(
+                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
+                PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                PowerManager.ON_AFTER_RELEASE,
+                "ambuone:sos_wake"
+            )
+            wl.acquire(3000L)
+        }
 
         val intent = Intent(this, LockScreenActivity::class.java).apply {
             addFlags(
@@ -132,7 +146,6 @@ class SosAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         keepAliveHandler.removeCallbacks(keepAlive)
         
-        // Release WakeLock when service is stopped to save battery
         if (serviceWakeLock?.isHeld == true) {
             serviceWakeLock?.release()
         }

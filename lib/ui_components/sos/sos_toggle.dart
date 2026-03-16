@@ -33,8 +33,6 @@ class _LockSosToggleState extends State<LockSosToggle> {
     final notif = SharedStorages().getSosStatus();
     final volume = await LockSosService.isAccessibilityEnabled();
     if (!mounted) return;
-    // Sync pref on load — covers case where user toggled accessibility
-    // outside the app since last launch
     await LockSosService.setVolumeButtonEnabled(volume);
     setState(() {
       _notificationEnabled = notif;
@@ -43,11 +41,9 @@ class _LockSosToggleState extends State<LockSosToggle> {
     });
   }
 
-  // Called when user returns from any system settings screen
   Future<void> _refreshAccessibilityState() async {
     final volume = await LockSosService.isAccessibilityEnabled();
     if (!mounted) return;
-    // Sync the pref to match real accessibility state
     await LockSosService.setVolumeButtonEnabled(volume);
     await SharedStorages().setVolumeButtonSosEnabled(volume);
     setState(() => _volumeEnabled = volume);
@@ -167,32 +163,29 @@ class _LockSosToggleState extends State<LockSosToggle> {
 
   Future<void> _onVolumeChanged(bool value) async {
     if (value && !_volumeEnabled) {
-      // Turning ON — show disclosure then open settings
-      final proceed = await _showVolumeSetupDialog();
-      if (proceed != true) return;
+      // Show the compliant disclosure dialog with checkbox
+      final agreed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const _AccessibilityConsentDialog(),
+      );
+
+      if (agreed != true) return;
 
       await LockSosService.openAccessibilitySettings();
 
-      // After returning from settings, check if user actually enabled it
       final nowEnabled = await LockSosService.isAccessibilityEnabled();
-      if (!nowEnabled) return; // user didn't enable — do nothing
+      if (!nowEnabled) return;
 
-      // ── CRITICAL: write the pref ──────────────────────────────────────
-      // This is what SosAccessibilityService.onKeyEvent() reads.
-      // Without this the service ignores all volume presses.
       await LockSosService.setVolumeButtonEnabled(true);
       await SharedStorages().setVolumeButtonSosEnabled(true);
       if (mounted) setState(() => _volumeEnabled = true);
-
-      // OEM autostart prompt — keeps the process alive on Xiaomi/OPPO/Vivo
       // if (mounted) await AutoStartHelper.checkAndOpenAutoStart(context);
     } else if (!value && _volumeEnabled) {
-      // Turning OFF — clear the pref immediately so service stops reacting
       await LockSosService.setVolumeButtonEnabled(false);
       await SharedStorages().setVolumeButtonSosEnabled(false);
       setState(() => _volumeEnabled = false);
 
-      // Also guide user to disable in accessibility settings
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -212,146 +205,18 @@ class _LockSosToggleState extends State<LockSosToggle> {
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Later'),
             ),
-            FilledButton(
+            MainButton(
               onPressed: () async {
                 Navigator.pop(ctx);
                 await LockSosService.openAccessibilitySettings();
               },
-              child: const Text('Open settings'),
+              buttonTitle: 'Open settings',
+              buttonColor: Theme.of(context).colorScheme.tertiary,
             ),
           ],
         ),
       );
     }
-  }
-
-  Future<bool?> _showVolumeSetupDialog() {
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              Icons.volume_down_rounded,
-              color: Colors.blue.shade700,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            const Text('Set up volume trigger'),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: Colors.blue.shade700,
-                      size: 15,
-                    ),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'AmbuOne only detects triple volume-down presses. '
-                        'No screen content or keystrokes are ever read.',
-                        style: TextStyle(fontSize: 11),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                'Follow these steps:',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-              ),
-              const SizedBox(height: 10),
-              _DialogStep(
-                number: '1',
-                color: Colors.blue.shade700,
-                title: 'Open Accessibility Settings',
-                body: 'Tap "Continue" below — we\'ll open it for you.',
-              ),
-              const SizedBox(height: 8),
-              _DialogStep(
-                number: '2',
-                color: Colors.blue.shade700,
-                title: 'Tap "Downloaded apps" or "Installed apps"',
-                body:
-                    'This section lists apps that have requested '
-                    'accessibility access.',
-              ),
-              const SizedBox(height: 8),
-              _DialogStep(
-                number: '3',
-                color: Colors.blue.shade700,
-                title: 'Tap "AmbuOne SOS trigger"',
-                body: 'You\'ll see it listed under AmbuOne.',
-              ),
-              const SizedBox(height: 8),
-              _DialogStep(
-                number: '4',
-                color: Colors.green.shade700,
-                title: 'Toggle it ON and tap Allow',
-                body:
-                    'Android will show a confirmation prompt — '
-                    'tap "Allow" to enable it.',
-              ),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.shade200),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline,
-                      color: Colors.green.shade700,
-                      size: 15,
-                    ),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'Once enabled, the toggle here will update '
-                        'automatically when you come back.',
-                        style: TextStyle(fontSize: 11),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
-    );
   }
 
   // ── Widget action ─────────────────────────────────────────────────────────
@@ -430,7 +295,6 @@ class _LockSosToggleState extends State<LockSosToggle> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header ────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
             child: Row(
@@ -478,7 +342,6 @@ class _LockSosToggleState extends State<LockSosToggle> {
 
           Divider(height: 1, color: scheme.secondary.withOpacity(0.2)),
 
-          // ── Toggle 1: Volume button ────────────────────────────────────
           _FeatureTile(
             icon: Icons.volume_down_rounded,
             title: 'Volume down button (3× press)',
@@ -503,7 +366,6 @@ class _LockSosToggleState extends State<LockSosToggle> {
             color: scheme.secondary.withOpacity(0.12),
           ),
 
-          // ── Toggle 2: Lock screen notification ────────────────────────
           _FeatureTile(
             icon: Icons.notifications_active_outlined,
             title: 'Lock screen notification',
@@ -522,7 +384,6 @@ class _LockSosToggleState extends State<LockSosToggle> {
             color: scheme.secondary.withOpacity(0.12),
           ),
 
-          // ── Action: Home screen widget ─────────────────────────────────
           _FeatureTile(
             icon: Icons.widgets_outlined,
             title: 'Home screen widget',
@@ -534,6 +395,215 @@ class _LockSosToggleState extends State<LockSosToggle> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Accessibility consent dialog — Google Play compliant
+// Extracted as StatefulWidget so the checkbox can manage its own state
+// without requiring the parent to rebuild
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AccessibilityConsentDialog extends StatefulWidget {
+  const _AccessibilityConsentDialog();
+
+  @override
+  State<_AccessibilityConsentDialog> createState() =>
+      _AccessibilityConsentDialogState();
+}
+
+class _AccessibilityConsentDialogState
+    extends State<_AccessibilityConsentDialog> {
+  // Checkbox must be explicitly ticked before "I Agree" is enabled
+  bool _hasConsented = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text('Permission Required'),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── What the service does ──────────────────────────────
+            const Text(
+              'To trigger SOS by pressing the volume button 3 times '
+              '(even when the screen is off), AmbuOne needs '
+              'Accessibility Service permission.',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+
+            // ── Data accessed ──────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Data accessed by this service:',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                  ),
+                  const SizedBox(height: 8),
+                  _DisclosureRow(
+                    icon: Icons.touch_app_outlined,
+                    text:
+                        'Volume key presses only — to detect the '
+                        '3× press pattern. No other keys are monitored.',
+                  ),
+                  const SizedBox(height: 6),
+                  _DisclosureRow(
+                    icon: Icons.location_on_outlined,
+                    text:
+                        'Precise & approximate location — collected '
+                        'only when SOS is triggered, to dispatch '
+                        'emergency services to your location.',
+                  ),
+                  const SizedBox(height: 6),
+                  _DisclosureRow(
+                    icon: Icons.block_outlined,
+                    text:
+                        'No screen content, keystrokes, or personal '
+                        'data is ever read or transmitted.',
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ── Revoke info ────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'You can revoke this permission anytime:\n'
+                'Settings → Accessibility → AmbuOne SOS trigger → Toggle OFF',
+                style: TextStyle(fontSize: 11, color: Colors.black54),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ── Steps ─────────────────────────────────────────────
+            const Text(
+              'Steps to enable:',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            _DialogStep(
+              number: '1',
+              color: Colors.blue.shade700,
+              title: 'Tap "I Agree & Continue" below',
+              body: 'We will open Accessibility Settings for you.',
+            ),
+            const SizedBox(height: 6),
+            _DialogStep(
+              number: '2',
+              color: Colors.blue.shade700,
+              title: 'Tap "Downloaded apps" or "Installed apps"',
+              body: 'Find AmbuOne SOS trigger in the list.',
+            ),
+            const SizedBox(height: 6),
+            _DialogStep(
+              number: '3',
+              color: Colors.green.shade700,
+              title: 'Toggle ON → tap Allow',
+              body: 'Android will confirm — tap Allow to activate.',
+            ),
+
+            const SizedBox(height: 16),
+
+            // ── Checkbox consent — required by Google Play policy ──
+            // The "I Agree" button is disabled until this is checked.
+            // This satisfies the "affirmative user action" requirement.
+            GestureDetector(
+              onTap: () => setState(() => _hasConsented = !_hasConsented),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Checkbox(
+                    value: _hasConsented,
+                    onChanged: (val) =>
+                        setState(() => _hasConsented = val ?? false),
+                    activeColor: Theme.of(context).colorScheme.secondary,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'I understand how AmbuOne uses the Accessibility '
+                      'Service and I consent to the data access '
+                      'described above.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+
+      // ── Two explicit buttons — required by Google Play policy ─────
+      actions: [
+        // Agree button — only enabled after checkbox is ticked
+        MainButton(
+          onPressed: _hasConsented ? () => Navigator.pop(context, true) : null,
+          buttonTitle: 'I Agree & Continue',
+          buttonColor: _hasConsented
+              ? Theme.of(context).colorScheme.tertiary
+              : Colors.grey,
+        ),
+        SizedBox(height: 8),
+        // Decline button — clearly labelled, always enabled
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context, false),
+              child: Text(
+                'Cancel',
+                style: AppFontStyles.errorTextStyle(context),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Disclosure row — icon + text used inside the data disclosure box
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DisclosureRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _DisclosureRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 14, color: Colors.blue.shade700),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 11))),
+      ],
     );
   }
 }

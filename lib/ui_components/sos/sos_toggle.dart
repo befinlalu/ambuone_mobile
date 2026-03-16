@@ -41,9 +41,50 @@ class _LockSosToggleState extends State<LockSosToggle> {
     });
   }
 
+  // Future<void> _refreshAccessibilityState() async {
+  //   final volume = await LockSosService.isAccessibilityEnabled();
+  //   if (!mounted) return;
+  //   await LockSosService.setVolumeButtonEnabled(volume);
+  //   await SharedStorages().setVolumeButtonSosEnabled(volume);
+  //   setState(() => _volumeEnabled = volume);
+  // }
+
   Future<void> _refreshAccessibilityState() async {
     final volume = await LockSosService.isAccessibilityEnabled();
     if (!mounted) return;
+
+    // Was enabled before but now it's off — OEM killed the process
+    // Show a persistent warning so the user knows their trigger is broken
+    if (_volumeEnabled && !volume) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red.shade700,
+          duration: const Duration(seconds: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          content: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Volume SOS was disabled by your phone. Tap Fix to re-enable.',
+                  style: TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          action: SnackBarAction(
+            label: 'Fix',
+            textColor: Colors.yellow,
+            onPressed: () => LockSosService.openAccessibilitySettings(),
+          ),
+        ),
+      );
+    }
+
     await LockSosService.setVolumeButtonEnabled(volume);
     await SharedStorages().setVolumeButtonSosEnabled(volume);
     setState(() => _volumeEnabled = volume);
@@ -143,13 +184,25 @@ class _LockSosToggleState extends State<LockSosToggle> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Skip'),
-          ),
-          FilledButton(
+          MainButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Disable battery optimization'),
+            buttonTitle: 'Disable battery optimization',
+            buttonColor: Theme.of(context).colorScheme.tertiary,
+          ),
+          SizedBox(height: 8),
+          // Decline button — clearly labelled, always enabled
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(context, false),
+                child: Text(
+                  'Cancel',
+                  style: AppFontStyles.errorTextStyle(context),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
           ),
         ],
       ),

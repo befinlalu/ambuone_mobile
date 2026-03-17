@@ -68,7 +68,6 @@
             android:name=".SosAccessibilityService"
             android:exported="true"
             android:label="AmbuOne SOS trigger"
-            android:process=":sos_accessibility"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

@@ -21,7 +21,6 @@ class MainActivity : FlutterActivity() {
     private val CHANNEL = "lock_sos"
 
     // In-app triple press state (screen on, app in foreground/background)
-    // AccessibilityService handles screen-off and app-closed cases
     private var volumeDownPressCount = 0
     private var lastVolumeDownTime = 0L
     private val VOLUME_PRESS_TIMEOUT = 2000L
@@ -38,7 +37,6 @@ class MainActivity : FlutterActivity() {
                 // ── SOS service ───────────────────────────────────────────
                 "startSosService" -> {
                     Log.d("SOS_FLOW", "startSosService received")
-                    // Use shared constant — prevents pref name mismatch bug
                     getSharedPreferences(SosForegroundService.PREF_NAME, MODE_PRIVATE)
                         .edit()
                         .putBoolean(SosForegroundService.KEY_SERVICE_ENABLED, true)
@@ -61,7 +59,7 @@ class MainActivity : FlutterActivity() {
                 }
 
                 // ── Battery optimization ──────────────────────────────────
-                "requestBatteryOptimization" -> {
+                "requestIgnoreBattery" -> { // Renamed to match Flutter UI
                     val pm = getSystemService(PowerManager::class.java)
                     if (!pm.isIgnoringBatteryOptimizations(packageName)) {
                         startActivity(
@@ -73,6 +71,57 @@ class MainActivity : FlutterActivity() {
                         )
                     }
                     result.success(true)
+                }
+                
+                "isIgnoringBatteryOptimizations" -> {
+                    val pm = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+                    result.success(pm.isIgnoringBatteryOptimizations(packageName))
+                }
+
+                // ── OEM Auto-Start Settings ───────────────────────────────
+                "openAutoStartSettings" -> {
+                    try {
+                        val intent = Intent()
+                        val manufacturer = android.os.Build.MANUFACTURER.lowercase()
+
+                        when {
+                            manufacturer.contains("xiaomi") || manufacturer.contains("poco") || manufacturer.contains("redmi") -> {
+                                intent.component = ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity")
+                            }
+                            manufacturer.contains("oppo") || manufacturer.contains("realme") -> {
+                                intent.component = ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity")
+                            }
+                            manufacturer.contains("vivo") -> {
+                                intent.component = ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity")
+                            }
+                            manufacturer.contains("oneplus") -> {
+                                intent.component = ComponentName("com.oneplus.security", "com.oneplus.receivers.PlatformDelegatable")
+                            }
+                            else -> {
+                                // For Samsung, Pixel, Motorola, etc., Auto-Start is handled via normal App Settings
+                                intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                intent.data = Uri.parse("package:$packageName")
+                            }
+                        }
+                        
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                        result.success(true)
+                        
+                    } catch (e: Exception) {
+                        Log.e("AutoStart", "Specific OEM menu failed: ${e.message}. Falling back.")
+                        // Safe Fallback: If the specific OEM menu doesn't exist on this exact model, 
+                        // open the standard App Settings page instead of crashing.
+                        try {
+                            val fallbackIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            fallbackIntent.data = Uri.parse("package:$packageName")
+                            fallbackIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(fallbackIntent)
+                            result.success(true)
+                        } catch (fallbackError: Exception) {
+                            result.error("FAILED", "Could not open settings", null)
+                        }
+                    }
                 }
 
                 // ── Volume button toggle ──────────────────────────────────
@@ -89,35 +138,22 @@ class MainActivity : FlutterActivity() {
                 // ── Home screen widget ────────────────────────────────────
                 "pinSosWidget" -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        val appWidgetManager =
-                            getSystemService(AppWidgetManager::class.java)
-                        val provider =
-                            ComponentName(this, SosWidgetProvider::class.java)
+                        val appWidgetManager = getSystemService(AppWidgetManager::class.java)
+                        val provider = ComponentName(this, SosWidgetProvider::class.java)
 
                         if (appWidgetManager.isRequestPinAppWidgetSupported) {
                             val successCallback = PendingIntent.getBroadcast(
                                 this, 0,
                                 Intent(this, SosWidgetProvider::class.java),
-                                PendingIntent.FLAG_UPDATE_CURRENT or
-                                        PendingIntent.FLAG_IMMUTABLE
+                                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                             )
-                            appWidgetManager.requestPinAppWidget(
-                                provider, null, successCallback
-                            )
+                            appWidgetManager.requestPinAppWidget(provider, null, successCallback)
                             result.success(true)
                         } else {
-                            result.error(
-                                "NOT_SUPPORTED",
-                                "Pinning not supported on this launcher",
-                                null
-                            )
+                            result.error("NOT_SUPPORTED", "Pinning not supported on this launcher", null)
                         }
                     } else {
-                        result.error(
-                            "VERSION_LOW",
-                            "Requires Android 8.0+",
-                            null
-                        )
+                        result.error("VERSION_LOW", "Requires Android 8.0+", null)
                     }
                 }
 
@@ -141,8 +177,6 @@ class MainActivity : FlutterActivity() {
     }
 
     // ── In-app volume triple press ────────────────────────────────────────────
-    // Fires when screen is ON and MainActivity is active/backgrounded.
-    // Does NOT fire screen-off — that is handled by SosAccessibilityService.
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val prefs = getSharedPreferences(SosForegroundService.PREF_NAME, MODE_PRIVATE)
         val volumeEnabled = prefs.getBoolean(SosForegroundService.KEY_VOLUME_ENABLED, false)
@@ -172,22 +206,21 @@ class MainActivity : FlutterActivity() {
                         )
                     }
                 )
+                // Consume the 3rd press so it doesn't trigger a volume change right as SOS fires
                 return true
             }
-            // Consume press 1 & 2 to prevent volume bar from animating
-            return true
+            
+            // CRITICAL FIX: Do NOT return true here. Return super.dispatchKeyEvent
+            // so the user can still turn their volume down normally on presses 1 and 2.
+            return super.dispatchKeyEvent(event)
         }
 
         return super.dispatchKeyEvent(event)
     }
 
     // ── Accessibility check ───────────────────────────────────────────────────
-    // Checks the system's enabled services list for our specific service.
-    // TextUtils.SimpleStringSplitter is more reliable than contains() because
-    // it handles cases where another service name contains our package name.
     private fun isAccessibilityServiceEnabled(context: Context): Boolean {
-        val service =
-            "${context.packageName}/${SosAccessibilityService::class.java.canonicalName}"
+        val service = "${context.packageName}/${SosAccessibilityService::class.java.canonicalName}"
         val enabledServices = Settings.Secure.getString(
             context.contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES

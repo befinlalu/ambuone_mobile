@@ -15,13 +15,27 @@ class _HomeState extends State<Home> {
   bool _locationEnabled = true;
   bool _networkEnabled = true;
 
+  // System Health state (for Android OEM restrictions)
+  bool _isBatteryOptimized = false;
+  bool _isAutoStartAcknowledged = true;
+
+  // Channel to communicate with MainActivity.kt
+  static const _channel = MethodChannel('lock_sos');
   late final AppLifecycleListener _lifecycleListener;
 
   @override
   void initState() {
     super.initState();
     _requestStandardPermissions();
-    _lifecycleListener = AppLifecycleListener(onResume: _checkConnectivity);
+
+    // Listen for when the user comes back to the app from Settings
+    _lifecycleListener = AppLifecycleListener(
+      onResume: () {
+        _checkConnectivity();
+        _checkSystemHealth();
+      },
+    );
+
     user = SharedStorages().getUser();
     if (user != null) {
       userDetails = SharedStorages().getUserDetails();
@@ -40,8 +54,12 @@ class _HomeState extends State<Home> {
     } else {
       context.go(PageRoutes.welcome);
     }
-    // Check after first frame so context is ready
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkConnectivity());
+
+    // Check system health and connectivity after the first frame renders
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkConnectivity();
+      _checkSystemHealth();
+    });
   }
 
   @override
@@ -51,10 +69,40 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _requestStandardPermissions() async {
-    await [Permission.location, Permission.notification].request();
+    // Only request if not already granted
+    if (await Permission.location.isDenied) {
+      await Permission.location.request();
+    }
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
   }
 
-  // Re-checks location and network every time app comes to foreground
+  // ── NEW: Background System Health Check ────────────────────────────────
+  Future<void> _checkSystemHealth() async {
+    if (!Platform.isAndroid) return; // Only needed for Android
+
+    try {
+      // 1. Ask Native Android if the app is currently battery optimized
+      final isIgnoring = await _channel.invokeMethod<bool>(
+        'isIgnoringBatteryOptimizations',
+      );
+
+      // 2. Check if the user has already acknowledged the Auto-Start warning
+      final prefs = await SharedPreferences.getInstance();
+      final autoStartAck = prefs.getBool('auto_start_acknowledged') ?? false;
+
+      if (!mounted) return;
+      setState(() {
+        // If it IS ignoring optimizations, then it is NOT optimized (which is good)
+        _isBatteryOptimized = !(isIgnoring ?? true);
+        _isAutoStartAcknowledged = autoStartAck;
+      });
+    } catch (e) {
+      debugPrint("Health check error: $e");
+    }
+  }
+
   Future<void> _checkConnectivity() async {
     final locationStatus = await Permission.location.serviceStatus;
     final connectivity = await Connectivity().checkConnectivity();
@@ -62,10 +110,12 @@ class _HomeState extends State<Home> {
     if (!mounted) return;
     setState(() {
       _locationEnabled = locationStatus == ServiceStatus.enabled;
-      _networkEnabled = connectivity != ConnectivityResult.none;
+      // Handle the case where connectivity might return a list in newer package versions
+      _networkEnabled = connectivity is List
+          ? !connectivity.contains(ConnectivityResult.none)
+          : connectivity != ConnectivityResult.none;
     });
 
-    // Show banners if something is off — only once per resume
     if (!_locationEnabled) _showLocationBanner();
     if (!_networkEnabled) _showNetworkBanner();
   }
@@ -119,7 +169,6 @@ class _HomeState extends State<Home> {
           TextButton(
             onPressed: () async {
               ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-              // Opens Wi-Fi settings — user can also enable mobile data from there
               await AppSettings.openAppSettings(type: AppSettingsType.wireless);
             },
             child: const Text('Open settings'),
@@ -130,7 +179,6 @@ class _HomeState extends State<Home> {
   }
 
   void sendAlert() {
-    // Guard before sending
     if (!_networkEnabled) {
       _showNetworkBanner();
       return;
@@ -233,6 +281,13 @@ class _HomeState extends State<Home> {
                   if (!_locationEnabled || !_networkEnabled)
                     const SizedBox(height: 12),
 
+                  // ── NEW: System Health Card ────────────────────────────
+                  if (_isBatteryOptimized || !_isAutoStartAcknowledged)
+                    _buildSystemHealthCard(),
+
+                  if (_isBatteryOptimized || !_isAutoStartAcknowledged)
+                    const SizedBox(height: 16),
+
                   // ── Profile card ───────────────────────────────────────
                   GestureDetector(
                     onTap: () {
@@ -260,7 +315,7 @@ class _HomeState extends State<Home> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(
-                          "${userDetails?.phoneNumber ?? ''}",
+                          userDetails?.phoneNumber ?? '',
                           style: AppFontStyles.bodySmallHint(context),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -308,6 +363,77 @@ class _HomeState extends State<Home> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  // ── NEW: System Health Card Widget ─────────────────────────────────────
+  Widget _buildSystemHealthCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red.shade200, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red),
+              const SizedBox(width: 8),
+              Text(
+                'Action Required',
+                style: AppFontStyles.bodySmallBold(
+                  context,
+                ).copyWith(color: Colors.red),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your phone might block the hardware SOS buttons when the screen is off. Please fix the following to ensure your safety:',
+            style: AppFontStyles.bodySmall(context),
+          ),
+          const SizedBox(height: 12),
+
+          if (_isBatteryOptimized)
+            ElevatedButton.icon(
+              onPressed: () async {
+                await _channel.invokeMethod('requestIgnoreBattery');
+              },
+              icon: const Icon(Icons.battery_alert, size: 18),
+              label: const Text('Disable Battery Restrictions'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.red,
+                elevation: 0,
+              ),
+            ),
+
+          if (!_isAutoStartAcknowledged) ...[
+            if (_isBatteryOptimized) const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: () async {
+                // 1. Open Native Settings
+                await _channel.invokeMethod('openAutoStartSettings');
+                // 2. Mark as acknowledged so it disappears
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('auto_start_acknowledged', true);
+                _checkSystemHealth();
+              },
+              icon: const Icon(Icons.rocket_launch, size: 18),
+              label: const Text('Enable Auto-Start'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.red,
+                elevation: 0,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
